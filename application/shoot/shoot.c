@@ -63,7 +63,7 @@ void ShootInit()
     Motor_Init_Config_s loader_config = {
         .can_init_config = {
             .can_handle = &hcan2,
-            .tx_id = 3,
+            .tx_id = 7,
         },
         .controller_param_init_config = {
             .angle_PID = {
@@ -111,7 +111,7 @@ void ShootTask()
     SubGetMessage(shoot_sub, &shoot_cmd_recv);
 
     // 对shoot mode等于SHOOT_STOP的情况特殊处理,直接停止所有电机(紧急停止)
-    if (shoot_cmd_recv.shoot_mode == SHOOT_OFF)
+    if (shoot_cmd_recv.shoot_mode == SHOOT_ON)
     {
         DJIMotorStop(friction_l);
         DJIMotorStop(friction_r);
