@@ -55,10 +55,13 @@
         "stm32f4xx_hal_conf.h": "c",
         "master_process.h": "c",
         "bsp_can.h": "c",
-        "can.h": "c"
+        "can.h": "c",
+        "cstdint": "c",
+        "usbd_cdc.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
-    // "C_Cpp.default.compilerPath": "D:\\Msys2\\mingw64\\bin\\arm-none-eabi-gcc.exe"
-    "makefile.compileCommandsPath": "build/compile_commands.json"
+    //"C_Cpp.default.compilerPath": "D:\\Msys2\\mingw64\\bin\\arm-none-eabi-gcc.exe",
+    "makefile.compileCommandsPath": "build/compile_commands.json",
+    "C_Cpp.errorSquiggles": "disabled"
 }

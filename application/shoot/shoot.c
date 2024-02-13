@@ -96,7 +96,7 @@ void ShootInit()
             .close_loop_type = CURRENT_LOOP | SPEED_LOOP,
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL, // 注意方向设置为拨盘的拨出的击发方向
         },
-        .motor_type = M2006 // 英雄使用m3508
+        .motor_type = M3508 // 英雄使用m3508
     };
     loader = DJIMotorInit(&loader_config);
 
