@@ -121,6 +121,7 @@ typedef enum
     LOAD_1_BULLET,  // 单发
     LOAD_3_BULLET,  // 三发
     LOAD_BURSTFIRE, // 连发
+    LOAD_VISION,    // 视觉发射
 } loader_mode_e;
 
 // 功率限制,从裁判系统获取,是否有必要保留?

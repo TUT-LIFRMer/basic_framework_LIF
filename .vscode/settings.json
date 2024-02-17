@@ -63,7 +63,8 @@
         "daemon.h": "c",
         "crc16.h": "c",
         "ins_task.h": "c",
-        "gimbal.h": "c"
+        "gimbal.h": "c",
+        "shoot.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",

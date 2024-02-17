@@ -1,6 +1,6 @@
 #include "shoot.h"
 #include "robot_def.h"
-
+#include "servo_motor.h"
 #include "dji_motor.h"
 #include "message_center.h"
 #include "bsp_dwt.h"
@@ -8,7 +8,7 @@
 
 /* 对于双发射机构的机器人,将下面的数据封装成结构体即可,生成两份shoot应用实例 */
 static DJIMotorInstance *friction_l, *friction_r, *loader; // 拨盘电机
-// static servo_instance *lid; 需要增加弹舱盖
+static ServoInstance *lid; //弹舱盖
 
 static Publisher_t *shoot_pub;
 static Shoot_Ctrl_Cmd_s shoot_cmd_recv; // 来自cmd的发射控制信息
@@ -99,7 +99,13 @@ void ShootInit()
         .motor_type = M3508 // 英雄使用m3508
     };
     loader = DJIMotorInit(&loader_config);
-
+    Servo_Init_Config_s lid_config = {
+        .Servo_type = Servo180,
+        .Servo_Angle_Type = Free_Angle_mode,
+        .htim = &htim1,
+        .Channel = TIM_CHANNEL_1,
+    };
+    lid = ServoInit(&lid_config);
     shoot_pub = PubRegister("shoot_feed", sizeof(Shoot_Upload_Data_s));
     shoot_sub = SubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
 }
@@ -201,11 +207,11 @@ void ShootTask()
     // 开关弹舱盖
     if (shoot_cmd_recv.lid_mode == LID_CLOSE)
     {
-        //...
+        Servo_Motor_FreeAngle_Set(lid, 90);
     }
     else if (shoot_cmd_recv.lid_mode == LID_OPEN)
     {
-        //...
+        Servo_Motor_FreeAngle_Set(lid, 180);
     }
 
     // 反馈数据,目前暂时没有要设定的反馈数据,后续可能增加应用离线监测以及卡弹反馈
