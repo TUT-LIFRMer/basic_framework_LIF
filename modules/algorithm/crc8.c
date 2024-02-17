@@ -1,6 +1,6 @@
 #include "crc8.h"
 
-/*
+/*使用的多项式为0X131(x^8 + x^5 + x^4 + 1)，POLY：0X31
  * static uint8_t sht75_crc_table[];
  *
  * The SHT75 humidity sensor is capable of calculating an 8 bit CRC checksum to

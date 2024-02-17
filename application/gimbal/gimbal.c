@@ -4,16 +4,17 @@
 #include "ins_task.h"
 #include "message_center.h"
 #include "general_def.h"
-
+#include "servo_motor.h"
 #include "bmi088.h"
 
 static attitude_t *gimba_IMU_data; // 云台IMU数据
 static DJIMotorInstance *yaw_motor, *pitch_motor;
-
+static ServoInstance *servo;
 static Publisher_t *gimbal_pub;                   // 云台应用消息发布者(云台反馈给cmd)
-static Subscriber_t *gimbal_sub;                  // cmd控制消息订阅者
+static Subscriber_t *gimbal_sub , *servo_sub;     // cmd控制消息订阅者
 static Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态信息
 static Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
+static int16_t servo_cmd_recv;                    // 来自cmd的舵机控制信息
 
 void GimbalInit()
 {
@@ -91,12 +92,22 @@ void GimbalInit()
         },
         .motor_type = GM6020,
     };
+    // 云台弹舱舵机
+    Servo_Init_Config_s servo_config = {
+        .Servo_type = Servo180,
+        .Servo_Angle_Type = Free_Angle_mode,
+        .htim = &htim1,
+        .Channel = TIM_CHANNEL_1,
+    };
+    servo = ServoInit(&servo_config);
+
     // 电机对total_angle闭环,上电时为零,会保持静止,收到遥控器数据再动
     yaw_motor = DJIMotorInit(&yaw_config);
     pitch_motor = DJIMotorInit(&pitch_config);
 
     gimbal_pub = PubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     gimbal_sub = SubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
+    servo_sub = SubRegister("servo_cmd", sizeof(int16_t));
 }
 
 /* 机器人云台控制核心任务,后续考虑只保留IMU控制,不再需要电机的反馈 */
@@ -105,7 +116,7 @@ void GimbalTask()
     // 获取云台控制数据
     // 后续增加未收到数据的处理
     SubGetMessage(gimbal_sub, &gimbal_cmd_recv);
-
+    SubGetMessage(servo_sub, &servo_cmd_recv);
     // @todo:现在已不再需要电机反馈,实际上可以始终使用IMU的姿态数据来作为云台的反馈,yaw电机的offset只是用来跟随底盘
     // 根据控制模式进行电机反馈切换和过渡,视觉模式在robot_cmd模块就已经设置好,gimbal只看yaw_ref和pitch_ref
     switch (gimbal_cmd_recv.gimbal_mode)
@@ -114,6 +125,7 @@ void GimbalTask()
     case GIMBAL_ZERO_FORCE:
         DJIMotorStop(yaw_motor);
         DJIMotorStop(pitch_motor);
+        Servo_Motor_FreeAngle_Set(servo, 90); // 舵机角度
         break;
     // 使用陀螺仪的反馈,底盘根据yaw电机的offset跟随云台或视觉模式采用
     case GIMBAL_GYRO_MODE: // 后续只保留此模式
@@ -125,6 +137,7 @@ void GimbalTask()
         DJIMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); // yaw和pitch会在robot_cmd中处理好多圈和单圈
         DJIMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
+        Servo_Motor_FreeAngle_Set(servo, servo_cmd_recv); // 舵机角度
         break;
     // 云台自由模式,使用编码器反馈,底盘和云台分离,仅云台旋转,一般用于调整云台姿态(英雄吊射等)/能量机关
     case GIMBAL_FREE_MODE: // 后续删除,或加入云台追地盘的跟随模式(响应速度更快)
@@ -136,6 +149,7 @@ void GimbalTask()
         DJIMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); // yaw和pitch会在robot_cmd中处理好多圈和单圈
         DJIMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
+        Servo_Motor_FreeAngle_Set(servo, servo_cmd_recv); // 舵机角度
         break;
     default:
         break;
