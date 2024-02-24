@@ -89,17 +89,17 @@ void ChassisInit()
     //  @todo: 当前还没有设置电机的正反转,仍然需要手动添加reference的正负号,需要电机module的支持,待修改.
     chassis_motor_config.can_init_config.tx_id = 1;
     chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_lf = DJIMotorInit(&chassis_motor_config);
+    motor_rf = DJIMotorInit(&chassis_motor_config);    
 
     chassis_motor_config.can_init_config.tx_id = 2;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_rf = DJIMotorInit(&chassis_motor_config);
-
-    chassis_motor_config.can_init_config.tx_id = 4;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_lb = DJIMotorInit(&chassis_motor_config);
+    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+    motor_lf = DJIMotorInit(&chassis_motor_config);
 
     chassis_motor_config.can_init_config.tx_id = 3;
+    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+    motor_lb = DJIMotorInit(&chassis_motor_config);
+
+    chassis_motor_config.can_init_config.tx_id = 4;
     chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
     motor_rb = DJIMotorInit(&chassis_motor_config);
 
@@ -145,10 +145,10 @@ void ChassisInit()
  */
 static void MecanumCalculate()
 {
-    vt_lf = -chassis_vx - chassis_vy - chassis_cmd_recv.wz * LF_CENTER;
-    vt_rf = -chassis_vx + chassis_vy - chassis_cmd_recv.wz * RF_CENTER;
-    vt_lb = chassis_vx - chassis_vy - chassis_cmd_recv.wz * LB_CENTER;
-    vt_rb = chassis_vx + chassis_vy - chassis_cmd_recv.wz * RB_CENTER;
+    vt_rf = chassis_vy - chassis_vx + chassis_cmd_recv.wz * RF_CENTER;
+    vt_lf = chassis_vy + chassis_vx - chassis_cmd_recv.wz * LF_CENTER;
+    vt_lb = chassis_vy - chassis_vx - chassis_cmd_recv.wz * LB_CENTER;
+    vt_rb = chassis_vy + chassis_vx + chassis_cmd_recv.wz * RB_CENTER;
 }
 
 /**
@@ -214,7 +214,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = 0;
         break;
     case CHASSIS_FOLLOW_GIMBAL_YAW: // 跟随云台,不单独设置pid,以误差角度平方为速度输出
-        chassis_cmd_recv.wz = -1.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
+        chassis_cmd_recv.wz = 1.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
         chassis_cmd_recv.wz = 4000;
@@ -228,8 +228,8 @@ void ChassisTask()
     static float sin_theta, cos_theta;
     cos_theta = arm_cos_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
     sin_theta = arm_sin_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
+    chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;  
     chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
-    chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
 
     // 根据控制模式进行正运动学解算,计算底盘输出
     MecanumCalculate();

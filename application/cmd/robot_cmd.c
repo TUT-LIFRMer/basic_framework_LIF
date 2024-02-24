@@ -122,7 +122,7 @@ static void RemoteControlSet()
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
     }
-    else if (switch_is_up(rc_data[TEMP].rc.switch_right))
+    else if (switch_is_up(rc_data[TEMP].rc.switch_right))//右侧开关为上为小陀螺模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
@@ -130,15 +130,15 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-    gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data.yaw);
-    gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.001f * (float)vision_recv_data.pitch);
+    gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data->yaw);
+    gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.001f * (float)vision_recv_data->pitch);
     }
     // 按照摇杆的输出大小进行角度增量,增益系数需调整
-    gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
+    gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
     gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
-    chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 右侧摇杆竖直方向控制x方向速度
-    chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // 右侧摇杆水平方向控制y方向速度
+    chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // 右侧摇杆竖直方向控制x方向速度
+    chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 右侧摇杆水平方向控制y方向速度
 
     // // 发射参数
     // if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],弹舱打开
