@@ -150,6 +150,7 @@ modules/message_center/message_center.c \
 modules/daemon/daemon.c \
 modules/vofa/vofa.c \
 modules/alarm/buzzer.c \
+bsp/log/printf.c \
 application/gimbal/gimbal.c \
 application/chassis/chassis.c \
 application/shoot/shoot.c \

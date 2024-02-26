@@ -4,9 +4,11 @@
 #include "SEGGER_RTT.h"
 #include "SEGGER_RTT_Conf.h"
 #include <stdio.h>
-
+#include <stdbool.h>
+#include <stdint.h>//gcc编译器对变量类型重定义需要的头文件
+#include "printf.h"
 #define BUFFER_INDEX 0
-
+extern char printf_buf[256];
 /**
  * @brief 日志系统初始化
  *
@@ -68,5 +70,6 @@ int PrintLog(const char *fmt, ...);
  * @param va 待转换的float
  */
 void Float2Str(char *str, float va);
-
+void RTT_PrintWave(int num_args, ...);
+void RTT_PrintWave_np(int num_args, ...);
 #endif

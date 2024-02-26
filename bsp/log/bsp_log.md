@@ -43,8 +43,31 @@ printf_log("Motor %d met some problem, error code %d!\n",3,1);
 第二个函数可以将浮点类型转换成字符串以方便发送：
 
 ```c
-float current_feedback=114.514;
-char* str_buff[64];
-Float2Str(str_buff,current_feedback);
-printf_log("Motor %d met some problem, error code %d!\n",3,1);
+    float a = -45.121;
+    float b = 3.1415926f;
+    char printf_buf[10];//这个变量已经在bsp_log.c中定义是全局变量不需要每次使用的时候在函数中声明本质上是储存字符串的内存缓存区
+    Float2Str(printf_buf,a);
+    PrintLog("a=%s\n",printf_buf);//默认显示在终端0上
+    //或者用以下方式
+    SEGGER_RTT_SetTerminal(1);//设置显示的终端
+    sprintf(printf_buf,"absolute=%f,absolute_set=%f\r\n",a,b);
+    SEGGER_RTT_WriteString(0, printf_buf);
 ```
+## H7TOOL RTT使用说明
+1、配置好wifi的账号密码
+2、USB接线查看H7的网关和电脑的网关是不是一样的，需要保证H7的网关和电脑在一个网段。
+3、选择wifi通信模式确保pc端的tool的ip地址和H7的ip地址在同一个网段。
+4、TOOL的IP网段必须和电脑在一个网段。而且电脑不能打开虚拟网卡（关闭科学上网）。
+5、重新打开上位机链接。
+## rtt波形显示使用示例
+```c
+    float a = 0.145f;
+    float b = -1.256f;
+    RTT_PrintWave_np(2,a,b);//非指针参数
+
+    float *c = a;
+    float *d = b;
+    RTT_PrintWave(2,c,d);//指针参数
+    //或者RTT_PrintWave(2,&a,&b);
+```
+在任何一个文件使用关于rtt的函数都需要包含`bsp_log.h`头文件。

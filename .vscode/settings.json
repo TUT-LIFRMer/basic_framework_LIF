@@ -64,7 +64,9 @@
         "crc16.h": "c",
         "ins_task.h": "c",
         "gimbal.h": "c",
-        "shoot.h": "c"
+        "shoot.h": "c",
+        "segger_rtt_conf.h": "c",
+        "stdbool.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",

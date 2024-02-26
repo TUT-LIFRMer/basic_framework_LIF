@@ -4,7 +4,7 @@
 #include "ins_task.h"
 #include "message_center.h"
 #include "general_def.h"
-
+#include "bsp_log.h"
 #include "bmi088.h"
 
 static attitude_t *gimba_IMU_data; // 云台IMU数据
