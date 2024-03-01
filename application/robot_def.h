@@ -24,6 +24,8 @@
 #define VISION_USE_VCP  // 使用虚拟串口发送视觉数据
 // #define VISION_USE_UART // 使用串口发送视觉数据
 
+#define VISION_SEND //视觉发送
+
 /* 机器人重要参数定义,注意根据不同机器人进行修改,浮点数需要以.0或f结尾,无符号以u结尾 */
 // 云台参数
 #define YAW_CHASSIS_ALIGN_ECD 3591  // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
@@ -171,6 +173,18 @@ typedef struct
     uint8_t rest_heat;
     float shoot_rate; // 连续发射的射频,unit per s,发/秒
 } Shoot_Ctrl_Cmd_s;
+/* ------------------------vision发布的控制数据----------------------*/
+typedef struct
+{
+    float pitch;//视觉控制的p值
+    float yaw;//视觉控制的y值
+    float shoot_frequency; // 发射的次数
+    uint8_t reach_minute      ;//上位机同步时间（分钟）
+   	uint8_t reach_second      ;//上位机同步时间（秒）
+    uint16_t reach_second_frac;//上位机同步时间（毫秒）
+} Vision_Ctrl_Cmd_s;
+
+
 
 /* ----------------gimbal/shoot/chassis发布的反馈数据----------------*/
 /**

@@ -14,6 +14,7 @@
 #include "daemon.h"
 #include "HT04.h"
 #include "buzzer.h"
+#include "vision_send.h"
 
 #include "bsp_log.h"
 
@@ -28,7 +29,7 @@ void StartMOTORTASK(void const *argument);
 void StartDAEMONTASK(void const *argument);
 void StartROBOTTASK(void const *argument);
 void StartUITASK(void const *argument);
-
+void VisionSENDTASK(void const *argument);
 /**
  * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
  *
@@ -51,6 +52,9 @@ void OSTaskInit()
     osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
     uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
 
+    osThreadDef(vision, VisionSENDTASK, osPriorityNormal, 0, 512);
+    uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+
     HTMotorControlInit(); // 没有注册HT电机则不会执行
 }
 
@@ -68,7 +72,7 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
-        VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
+        // VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
         osDelay(1);
     }
 }
@@ -137,3 +141,22 @@ __attribute__((noreturn)) void StartUITASK(void const *argument)
         osDelay(1); // 即使没有任何UI需要刷新,也挂起一次,防止卡在UITask中无法切换
     }
 }
+
+//10Hz
+#ifdef VISION_SEND
+__attribute__((noreturn)) void VisionSENDTASK(void const *argument)
+{
+    static float Visionsend_dt;
+    static float Visionsend_start;
+    LOGINFO("[freeRTOS] Vision send Task Start");
+    for (;;)
+    {
+        Visionsend_start = DWT_GetTimeline_ms();
+        VisionSendTask();
+        Visionsend_dt = DWT_GetTimeline_ms() - Visionsend_start;
+        if (Visionsend_dt > 10)
+            LOGERROR("[freeRTOS] Vision Task is being DELAY! dt = [%f]", &Visionsend_dt);
+        osDelay(10);
+    }
+}
+#endif

@@ -13,11 +13,13 @@
 #include "daemon.h"
 #include "bsp_log.h"
 #include "robot_def.h"
+#include "bsp_dwt.h"
 
 static Vision_Recv_s recv_data;
 static Vision_Send_s send_data;
 static DaemonInstance *vision_daemon_instance;
-
+float dwttime;
+POS_DATA vision_send_data;//视觉数据发送缓存区
 void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Speed_e bullet_speed)
 {
     send_data.enemy_color = enemy_color;
@@ -117,9 +119,16 @@ static uint8_t *vis_recv_buff;
 
 static void DecodeVision(uint16_t recv_len)
 {
-    uint16_t flag_register;
-    get_protocol_info(vis_recv_buff, &flag_register, (uint8_t *)&recv_data.pitch);
+    static uint16_t get_flag;
+    get_flag = get_protocol_info(vis_recv_buff, (uint8_t *)&recv_data);
     // TODO: code to resolve flag_register;
+    if (get_flag == DATA_STATE_SYN)
+    {
+        dwttime = DWT_GetTimeline_ms();
+        vision_send_data.time_minute = recv_data.SYN_DATA.time_minute;
+        vision_send_data.time_second = recv_data.SYN_DATA.time_second;
+        vision_send_data.time_second_frac = recv_data.SYN_DATA.time_second_frac;
+    }
 }
 
 /* 视觉通信初始化 */
@@ -127,6 +136,7 @@ Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle)
 {
     UNUSED(_handle); // 仅为了消除警告
     USB_Init_Config_s conf = {.rx_cbk = DecodeVision};
+    memset(&recv_data, 0, sizeof(Vision_Recv_s));
     vis_recv_buff = USBInit(conf);
 
     // 为master process注册daemon,用于判断视觉通信是否离线
@@ -136,20 +146,14 @@ Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle)
         .reload_count = 5, // 50ms
     };
     vision_daemon_instance = DaemonRegister(&daemon_conf);
-
     return &recv_data;
 }
 
-void VisionSend()
-{
-    static uint16_t flag_register;
-    static uint8_t send_buff[VISION_SEND_SIZE];
-    static uint16_t tx_len;
-    // TODO: code to set flag_register
-    flag_register = 30 << 8 | 0b00000001;
-    // 将数据转化为seasky协议的数据包
-    get_protocol_send_data(0x02, flag_register, &send_data.yaw, 3, send_buff, &tx_len);
-    USBTransmit(send_buff, tx_len);
-}
+// void VisionSend()
+// {
+//     // 将数据转化为seasky协议的数据包
+//     get_protocol_send_data(0x02, flag_register, &send_data.yaw, 3, send_buff, &tx_len);
+//     USBTransmit(send_buff, tx_len);
+// }
 
 #endif // VISION_USE_VCP

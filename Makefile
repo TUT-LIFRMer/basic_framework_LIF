@@ -14,7 +14,7 @@
 ######################################
 # target
 ######################################
-TARGET = basic_framework
+TARGET = basic_framework_LIF
 
 
 ######################################
@@ -155,7 +155,8 @@ application/gimbal/gimbal.c \
 application/chassis/chassis.c \
 application/shoot/shoot.c \
 application/cmd/robot_cmd.c \
-application/robot.c
+application/robot.c \
+application/Vision/vision_send.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -233,6 +234,7 @@ C_INCLUDES =  \
 -Iapplication/shoot \
 -Iapplication/gimbal \
 -Iapplication/cmd \
+-Iapplication/Vision \
 -Iapplication \
 -Ibsp/dwt \
 -Ibsp/can \

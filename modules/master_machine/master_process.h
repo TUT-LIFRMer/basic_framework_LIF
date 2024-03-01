@@ -2,10 +2,11 @@
 #define MASTER_PROCESS_H
 
 #include "bsp_usart.h"
-#include "seasky_protocol.h"
 
 #define VISION_RECV_SIZE 18u // 当前为固定值,36字节
 #define VISION_SEND_SIZE 36u
+
+extern float dwttime;
 
 #pragma pack(1)
 typedef enum
@@ -37,14 +38,46 @@ typedef enum
 
 typedef struct
 {
-	Fire_Mode_e fire_mode;
-	Target_State_e target_state;
-	Target_Type_e target_type;
+	struct 
+	{
+    	char   sof                ;
+    	int8_t fire_times         ;
+    	int16_t relative_pitch    ;
+    	int16_t relative_yaw      ;
+    	uint8_t reach_minute      ;
+   		uint8_t reach_second      ;
+    	uint16_t reach_second_frac;
+    	int16_t setting_voltage_or_rpm;
+    	uint32_t crc_check        ;
 
-	float pitch;
-	float yaw;
+	}ACTION_DATA;
+	struct
+	{
+    	char   sof                  ;
+    	uint8_t time_minute         ;
+   		uint8_t time_second         ;
+    	uint16_t time_second_frac   ;
+    	char null_7byte[7]          ;
+    	uint32_t crc_check          ;
+    
+	}SYN_DATA;
 } Vision_Recv_s;
 
+typedef struct
+{
+
+    char sof;
+    uint8_t time_minute;
+    uint8_t time_second;
+    uint16_t time_second_frac;
+    int16_t present_pitch;
+    int16_t present_yaw;
+    int16_t present_debug_value;
+    char null_byte;
+    uint32_t crc_value;
+
+}POS_DATA;
+extern POS_DATA vision_send_data;//视觉数据发送缓存区
 typedef enum
 {
 	COLOR_NONE = 0,
@@ -88,11 +121,11 @@ typedef struct
  */
 Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle);
 
-/**
- * @brief 发送视觉数据
- *
- */
-void VisionSend();
+// /**
+//  * @brief 发送视觉数据
+//  *
+//  */
+// void VisionSend();
 
 /**
  * @brief 设置视觉发送标志位

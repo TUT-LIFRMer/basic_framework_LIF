@@ -2,7 +2,7 @@
  * @file seasky_protocol.c
  * @author Liu Wei
  * @author modified by Neozng
- * @brief 湖南大学RoBoMatster串口通信协议
+ * @brief RoBoMatster串口通信协议
  * @version 0.1
  * @date 2022-11-03
  *
@@ -11,9 +11,32 @@
  */
 
 #include "seasky_protocol.h"
+#include "master_process.h"
 #include "crc8.h"
 #include "crc16.h"
 #include "memory.h"
+
+
+//LIF视觉串口校验
+CRC_STATE check_data4_crc32(uint8_t *pbuffer,uint8_t length_4multi)
+{
+    uint32_t *p32;
+    uint32_t crc_cal = 0;
+    
+    p32 = (uint32_t*)&pbuffer[0];
+    crc_cal = HAL_CRC_Calculate(&hcrc,p32,(uint32_t)(length_4multi/4-1));
+
+    p32 = (uint32_t*)&pbuffer[12];
+    if (*p32 == crc_cal)
+    {
+      return CRC_RIGHT;
+    }
+    else
+    {
+      return CRC_WRONG;
+    }
+}
+
 
 /*获取CRC8校验码*/
 uint8_t Get_CRC8_Check(uint8_t *pchMessage,uint16_t dwLength)
@@ -69,65 +92,107 @@ static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
     此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
     后续调用通信接口的发送函数发送tx_buf中的对应数据
 */
-void get_protocol_send_data(uint16_t send_id,        // 信号id
-                            uint16_t flags_register, // 16位寄存器
-                            float *tx_data,          // 待发送的float数据
-                            uint8_t float_length,    // float的数据长度
-                            uint8_t *tx_buf,         // 待发送的数据帧
-                            uint16_t *tx_buf_len)    // 待发送的数据帧长度
+/*
+    此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
+    后续调用通信接口的发送函数发送tx_buf中的对应数据
+*/
+
+void get_protocol_send_data(
+                            POS_DATA *tx_data,         // 待发送的数据帧
+                            uint8_t *tx_buf)    // 待发送的数据帧长度
 {
-    static uint16_t crc16;
-    static uint16_t data_len;
+    uint16_t *pu16;
+    int16_t *pi16;
+    uint32_t *p32;
+    
 
-    data_len = float_length * 4 + 2;
-    /*帧头部分*/
-    tx_buf[0] = PROTOCOL_CMD_ID;
-    tx_buf[1] = data_len & 0xff;        // 低位在前
-    tx_buf[2] = (data_len >> 8) & 0xff; // 低位在前
-    tx_buf[3] = crc_8(&tx_buf[0], 3);   // 获取CRC8校验位
+    tx_buf[0] = tx_data->sof;
+    tx_buf[1] = tx_data->time_minute;
+    tx_buf[2] = tx_data->time_second;
 
-    /*数据的信号id*/
-    tx_buf[4] = send_id & 0xff;
-    tx_buf[5] = (send_id >> 8) & 0xff;
 
-    /*建立16位寄存器*/
-    tx_buf[6] = flags_register & 0xff;
-    tx_buf[7] = (flags_register >> 8) & 0xff;
+    pu16 = (uint16_t*)&tx_buf[3];
+    *pu16 = tx_data->time_second_frac;
 
-    /*float数据段*/
-    for (int i = 0; i < 4 * float_length; i++)
-    {
-        tx_buf[i + 8] = ((uint8_t *)(&tx_data[i / 4]))[i % 4];
-    }
+    pi16 = (int16_t*)&tx_buf[5];
+    *pi16 = tx_data->present_pitch;
 
-    /*整包校验*/
-    crc16 = crc_16(&tx_buf[0], data_len + 6);
-    tx_buf[data_len + 6] = crc16 & 0xff;
-    tx_buf[data_len + 7] = (crc16 >> 8) & 0xff;
+    pi16 = (int16_t*)&tx_buf[7];
+    *pi16 = tx_data->present_yaw;
 
-    *tx_buf_len = data_len + 8;
+    pi16 = (int16_t*)&tx_buf[9];
+    *pi16 = tx_data->present_debug_value;
+   
+    tx_buf[11] = tx_data->null_byte;
+
+
+
+    p32 = (uint32_t*)&tx_buf[0];
+    tx_data->crc_value=HAL_CRC_Calculate(&hcrc,p32,3);
+    p32 = (uint32_t*)&tx_buf[12];
+    *p32 = tx_data->crc_value;
 }
 /*
     此函数用于处理接收数据，
     返回数据内容的id
 */
+
+void receive_action_to_data(uint8_t *prx_data ,Vision_Recv_s *pout)
+{
+  pout->ACTION_DATA.sof                 = prx_data[0];
+  pout->ACTION_DATA.fire_times          = prx_data[1];
+  pout->ACTION_DATA.relative_pitch      = *((int16_t*) &prx_data[2]);
+  pout->ACTION_DATA.relative_yaw        = *((int16_t*) &prx_data[4]);
+  pout->ACTION_DATA.reach_minute        = prx_data[6];
+  pout->ACTION_DATA.reach_second        = prx_data[7];
+  pout->ACTION_DATA.reach_second_frac   = *((uint16_t*) &prx_data[8]);
+  pout->ACTION_DATA.setting_voltage_or_rpm = *((int16_t*)&prx_data[10]);
+  pout->ACTION_DATA.crc_check           = *((uint32_t*) &prx_data[12]);
+}
+
+void receive_syn_to_data(uint8_t *prx_data,Vision_Recv_s *pout)
+{
+  pout->SYN_DATA.sof = prx_data[0];
+  pout->SYN_DATA.time_minute = *((uint8_t*)&prx_data[1]);
+  pout->SYN_DATA.time_second = *((uint8_t*)&prx_data[2]);
+  pout->SYN_DATA.time_second_frac = *((uint16_t*)&prx_data[3]);
+  for (uint8_t i = 0; i < 7; i++)
+  {
+    pout->SYN_DATA.null_7byte[i] = prx_data[5+i];
+  }  
+  pout->SYN_DATA.crc_check = *((uint32_t*)&prx_data[12]);
+}
+
 uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
-                           uint16_t *flags_register, // 接收数据的16位寄存器地址
                            uint8_t *rx_data)         // 接收的float数据存储地址
 {
-    // 放在静态区,避免反复申请栈上空间
-    static protocol_rm_struct pro;
-    static uint16_t date_length;
-
-    if (protocol_heade_Check(&pro, rx_buf))
+    switch (rx_buf[0])
     {
-        date_length = OFFSET_BYTE + pro.header.data_length;
-        if (CRC16_Check_Sum(&rx_buf[0], date_length))
+    case 'A':
+        if(check_data4_crc32(rx_buf,ACTION_DATA_LENGTH) != CRC_RIGHT)
         {
-            *flags_register = (rx_buf[7] << 8) | rx_buf[6];
-            memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
-            return pro.cmd_id;
+            return DATA_STATE_WRONG;
         }
+        else
+        {
+            receive_action_to_data(rx_buf,(Vision_Recv_s *)rx_data);
+            return DATA_STATE_ACTION;
+        }
+        break;
+    case 'S':
+        if (check_data4_crc32(rx_buf,SYN_DATA_LENGTH) != CRC_RIGHT)
+        {
+            return DATA_STATE_WRONG;
+        }
+        else
+        {
+            receive_syn_to_data(rx_buf,(Vision_Recv_s *)rx_data);
+            return DATA_STATE_SYN;
+        }
+        break;
+    default:
+        return DATA_STATE_WRONG;
+        break;
     }
     return 0;
 }

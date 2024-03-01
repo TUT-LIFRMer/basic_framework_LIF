@@ -30,8 +30,8 @@ static Chassis_Ctrl_Cmd_s chassis_cmd_send;      // 发送给底盘应用的信�
 static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反馈信息信息,底盘功率枪口热量与底盘运动状态等
 
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
-static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
-static Vision_Send_s vision_send_data;  // 视觉发送数据
+// static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
+// static Vision_Send_s vision_send_data;  // 视觉发送数据
 
 static Publisher_t *gimbal_cmd_pub;            // 云台控制消息发布者
 static Subscriber_t *gimbal_feed_sub;          // 云台反馈信息订阅者
@@ -43,17 +43,22 @@ static Subscriber_t *shoot_feed_sub;         // 发射反馈信息订阅者
 static Shoot_Ctrl_Cmd_s shoot_cmd_send;      // 传递给发射的控制信息
 static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反馈信息
 
+static Subscriber_t *vision_cmd_sub;          // 视觉控制信息订阅者
+static Vision_Ctrl_Cmd_s vision_cmd_data;      // 传递视觉控制的控制信息
+
 static Robot_Status_e robot_state; // 机器人整体工作状态
 
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个
-    vision_recv_data = VisionInit(&huart1); // 视觉通信串口
+    // vision_recv_data = VisionInit(&huart1); // 视觉通信串口
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     shoot_cmd_pub = PubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
     shoot_feed_sub = SubRegister("shoot_feed", sizeof(Shoot_Upload_Data_s));
+
+    vision_cmd_sub = SubRegister("vision_cmd", sizeof(Vision_Ctrl_Cmd_s));
 
 #ifdef ONE_BOARD // 双板兼容
     chassis_cmd_pub = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
@@ -72,8 +77,8 @@ void RobotCMDInit()
     cmd_can_comm = CANCommInit(&comm_conf);
 #endif // GIMBAL_BOARD
     gimbal_cmd_send.pitch = 0;
-    vision_recv_data->pitch = 0;
-    vision_recv_data->yaw = 0;
+    // vision_recv_data->pitch = 0;
+    // vision_recv_data->yaw = 0;
     robot_state = ROBOT_READY; // 启动时机器人进入工作模式,后续加入所有应用初始化完成之后再进入
 }
 
@@ -130,9 +135,16 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-    gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data->yaw);
-    gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.001f * (float)vision_recv_data->pitch);
-    }
+        gimbal_cmd_send.pitch = vision_cmd_data.pitch*RAD_2_DEGREE;
+        gimbal_cmd_send.yaw = vision_cmd_data.yaw*RAD_2_DEGREE;
+        shoot_cmd_send.load_mode = LOAD_VISION;
+        shoot_cmd_send.shoot_rate = vision_cmd_data.shoot_frequency;
+    // gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data->yaw);
+    // gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.001f * (float)vision_recv_data->pitch);
+    } else if (switch_is_mid(rc_data[TEMP].rc.switch_left))
+    {
+        shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    };
     // 按照摇杆的输出大小进行角度增量,增益系数需调整
     gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
     gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
@@ -172,14 +184,18 @@ static void RemoteControlSet()
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         count=0;
     }
-        
-    // 拨弹控制,遥控器固定为一种拨弹模式,可自行选择
-    if (rc_data[TEMP].rc.dial > 300 && rc_data[TEMP].rc.dial < 500)
-        shoot_cmd_send.load_mode = LOAD_1_BULLET;
-    else if (rc_data[TEMP].rc.dial > 500)
-        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
-    shoot_cmd_send.shoot_rate = 8;
+    if (shoot_cmd_send.load_mode != LOAD_VISION)
+    {
+        // 拨弹控制,遥控器固定为一种拨弹模式,可自行选择
+        if (rc_data[TEMP].rc.dial > 300 && rc_data[TEMP].rc.dial < 500)
+            shoot_cmd_send.load_mode = LOAD_1_BULLET;
+        else if (rc_data[TEMP].rc.dial > 500)
+            shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+        // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
+        shoot_cmd_send.shoot_rate = 8;
+    }
+    
+
 }
 
 /**
@@ -307,7 +323,7 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
     SubGetMessage(gimbal_feed_sub, &gimbal_fetch_data);
-
+    SubGetMessage(vision_cmd_sub, &vision_cmd_data);
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
     // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
@@ -331,5 +347,5 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
-    VisionSend(&vision_send_data);
+    //VisionSend(&vision_send_data);
 }

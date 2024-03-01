@@ -169,6 +169,18 @@ void ShootTask()
         DJIMotorOuterLoop(loader, SPEED_LOOP);
         // ...
         break;
+    case LOAD_VISION:
+        if (shoot_cmd_recv.friction_mode == FRICTION_ON)
+        {
+            DJIMotorOuterLoop(loader, ANGLE_LOOP);                                              // 切换到角度环
+            DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE*shoot_cmd_recv.shoot_rate)); // 控制量增加一发弹丸的角度
+            hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
+            dead_time = 150;                                                                    // 完成1发弹丸发射的时间
+        } else {
+            DJIMotorOuterLoop(loader, ANGLE_LOOP);              //不拨动弹丸                  
+            DJIMotorSetRef(loader, loader->measure.total_angle); 
+        }
+        break;
     default:
         while (1)
             ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
