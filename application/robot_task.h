@@ -23,13 +23,14 @@ osThreadId robotTaskHandle;
 osThreadId motorTaskHandle;
 osThreadId daemonTaskHandle;
 osThreadId uiTaskHandle;
+osThreadId visionTaskHandle;
 
 void StartINSTASK(void const *argument);
 void StartMOTORTASK(void const *argument);
 void StartDAEMONTASK(void const *argument);
 void StartROBOTTASK(void const *argument);
 void StartUITASK(void const *argument);
-void VisionSENDTASK(void const *argument);
+// void VisionSENDTASK(void const *argument);
 /**
  * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
  *
@@ -52,8 +53,8 @@ void OSTaskInit()
     osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
     uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
 
-    osThreadDef(vision, VisionSENDTASK, osPriorityNormal, 0, 512);
-    uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+    // osThreadDef(visiontask, VisionSENDTASK, osPriorityNormal, 0, 512);
+    // visionTaskHandle = osThreadCreate(osThread(visiontask), NULL);
 
     HTMotorControlInit(); // 没有注册HT电机则不会执行
 }
@@ -143,20 +144,21 @@ __attribute__((noreturn)) void StartUITASK(void const *argument)
 }
 
 //10Hz
-#ifdef VISION_SEND
-__attribute__((noreturn)) void VisionSENDTASK(void const *argument)
-{
-    static float Visionsend_dt;
-    static float Visionsend_start;
-    LOGINFO("[freeRTOS] Vision send Task Start");
-    for (;;)
-    {
-        Visionsend_start = DWT_GetTimeline_ms();
-        VisionSendTask();
-        Visionsend_dt = DWT_GetTimeline_ms() - Visionsend_start;
-        if (Visionsend_dt > 10)
-            LOGERROR("[freeRTOS] Vision Task is being DELAY! dt = [%f]", &Visionsend_dt);
-        osDelay(10);
-    }
-}
-#endif
+// #ifdef VISION_SEND
+// __attribute__((noreturn)) void VisionSENDTASK(void const *argument)
+// {
+//     static float Visionsend_dt;
+//     static float Visionsend_start;
+//     LOGINFO("[freeRTOS] Vision send Task Start");
+//     VisionStartInit(); // 初始化视觉发送模块
+//     for (;;)
+//     {
+//         Visionsend_start = DWT_GetTimeline_ms();
+//         VisionSendTask();
+//         Visionsend_dt = DWT_GetTimeline_ms() - Visionsend_start;
+//         if (Visionsend_dt > 10)
+//             LOGERROR("[freeRTOS] Vision Task is being DELAY! dt = [%f]", &Visionsend_dt);
+//         osDelay(10);
+//     }
+// }
+// #endif

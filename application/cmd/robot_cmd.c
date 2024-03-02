@@ -93,20 +93,21 @@ static void CalcOffsetAngle()
     static float angle;
     angle = gimbal_fetch_data.yaw_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度
 #if YAW_ECD_GREATER_THAN_4096                               // 如果大于180度
-    if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
-        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-    else if (angle > 180.0f + YAW_ALIGN_ANGLE)
-        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE - 360.0f;
-    else
-        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-#else // 小于180度
     if (angle > YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else if (angle <= YAW_ALIGN_ANGLE && angle >= YAW_ALIGN_ANGLE - 180.0f)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE + 360.0f;
+#else // 小于180度
+    if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
+        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
+    else if (angle > 180.0f + YAW_ALIGN_ANGLE)
+        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE - 360.0f;
+    else
+        chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
 #endif
+
 }
 
 /**
@@ -135,8 +136,8 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-        gimbal_cmd_send.pitch = vision_cmd_data.pitch*RAD_2_DEGREE;
-        gimbal_cmd_send.yaw = vision_cmd_data.yaw*RAD_2_DEGREE;
+        gimbal_cmd_send.pitch = gimbal_cmd_send.yaw+vision_cmd_data.pitch*RAD_2_DEGREE;
+        gimbal_cmd_send.yaw = gimbal_cmd_send.pitch+vision_cmd_data.yaw*RAD_2_DEGREE;
         shoot_cmd_send.load_mode = LOAD_VISION;
         shoot_cmd_send.shoot_rate = vision_cmd_data.shoot_frequency;
     // gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data->yaw);

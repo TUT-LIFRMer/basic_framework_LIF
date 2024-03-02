@@ -6,6 +6,7 @@
 #include "general_def.h"
 #include "master_process.h"
 #include "seasky_protocol.h"
+#include "dji_motor.h"
 
 //bsp
 #include "bsp_dwt.h"
@@ -60,14 +61,14 @@ void VisionSendTask(){
     {
         vision_send_data.time_minute = vision_send_data.time_minute%60;
     }
-    vision_send_data.present_pitch = (int16_t)gimbal_fetch_data.gimbal_imu_data.Pitch;
-    vision_send_data.present_yaw = (int16_t)gimbal_fetch_data.gimbal_imu_data.Yaw;
+    vision_send_data.present_pitch = (int16_t)((gimbal_fetch_data.gimbal_imu_data.Pitch/ECD_ANGLE_COEF_DJI)*10000*0.0007669903);
+    vision_send_data.present_yaw = (int16_t)((gimbal_fetch_data.gimbal_imu_data.Yaw/ECD_ANGLE_COEF_DJI)*10000*0.0007669903);
     vision_send_data.present_debug_value = 0;
     vision_send_data.null_byte = 1;
     VisionSend();
     dwttime = DWT_GetTimeline_ms();
-    vision_cmd_data.pitch = (float)vision_recv_data->ACTION_DATA.relative_pitch/10000;
-    vision_cmd_data.yaw = (float)vision_recv_data->ACTION_DATA.relative_yaw/10000;
+    vision_cmd_data.pitch = ((float)vision_recv_data->ACTION_DATA.relative_pitch)/10000;
+    vision_cmd_data.yaw = ((float)vision_recv_data->ACTION_DATA.relative_yaw)/10000;
     vision_cmd_data.shoot_frequency = (float)vision_recv_data->ACTION_DATA.fire_times;
     vision_cmd_data.reach_minute = vision_recv_data->ACTION_DATA.reach_minute;
     vision_cmd_data.reach_second = vision_recv_data->ACTION_DATA.reach_second;
