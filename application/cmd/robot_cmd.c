@@ -72,8 +72,8 @@ void RobotCMDInit()
     cmd_can_comm = CANCommInit(&comm_conf);
 #endif // GIMBAL_BOARD
     gimbal_cmd_send.pitch = 0;
-    vision_recv_data->pitch = 0;
-    vision_recv_data->yaw = 0;
+    vision_recv_data->ACTION_DATA.relative_pitch = 0;
+    vision_recv_data->ACTION_DATA.relative_yaw = 0;
     robot_state = ROBOT_READY; // 启动时机器人进入工作模式,后续加入所有应用初始化完成之后再进入
 }
 
@@ -130,8 +130,12 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-    gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.005f * (float)vision_recv_data->yaw);
-    gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.001f * (float)vision_recv_data->pitch);
+        gimbal_cmd_send.yaw += (0.005f * (float)rc_data[TEMP].rc.rocker_l_ + 0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw);
+        gimbal_cmd_send.pitch += (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + 0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch);
+        shoot_cmd_send.load_mode = LOAD_VISION;
+        shoot_cmd_send.shoot_rate = vision_recv_data->ACTION_DATA.fire_times;
+    } else {
+        shoot_cmd_send.load_mode = LOAD_STOP;
     }
     // 按照摇杆的输出大小进行角度增量,增益系数需调整
     gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
@@ -150,7 +154,6 @@ static void RemoteControlSet()
         count=count+1;
         if(count==400){
             shoot_cmd_send.lid_mode = LID_OPEN;
-            count=0;
         }
     }
     else
@@ -164,7 +167,6 @@ static void RemoteControlSet()
         count=count+1;
         if(count==400){
             shoot_cmd_send.friction_mode = FRICTION_ON;
-            count=0;
         }
     }
     else
@@ -174,12 +176,17 @@ static void RemoteControlSet()
     }
         
     // 拨弹控制,遥控器固定为一种拨弹模式,可自行选择
-    if (rc_data[TEMP].rc.dial > 300 && rc_data[TEMP].rc.dial < 500)
-        shoot_cmd_send.load_mode = LOAD_1_BULLET;
-    else if (rc_data[TEMP].rc.dial > 500)
-        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
-    shoot_cmd_send.shoot_rate = 8;
+    if (shoot_cmd_send.load_mode != LOAD_VISION)
+    {
+        if (rc_data[TEMP].rc.dial > 300 && rc_data[TEMP].rc.dial < 500)
+            shoot_cmd_send.load_mode = LOAD_1_BULLET;
+        else if (rc_data[TEMP].rc.dial > 500)
+            shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+        // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
+        shoot_cmd_send.shoot_rate = 8;
+    }
+    
+
 }
 
 /**

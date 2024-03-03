@@ -2,10 +2,13 @@
 #define MASTER_PROCESS_H
 
 #include "bsp_usart.h"
-#include "seasky_protocol.h"
+// #include "seasky_protocol.h"
 
 #define VISION_RECV_SIZE 18u // 当前为固定值,36字节
 #define VISION_SEND_SIZE 36u
+#define ACTION_DATA_LENGTH 16
+#define SYN_DATA_LENGTH 16
+#define CV_SEND_LENGTH 16
 
 #pragma pack(1)
 typedef enum
@@ -35,14 +38,44 @@ typedef enum
 	BASE = 8
 } Target_Type_e;
 
+typedef enum
+{
+    DATA_STATE_ACTION,
+    DATA_STATE_POS,
+    DATA_STATE_SYN,
+    DATA_STATE_WRONG
+}DATA_STATE;
+
+typedef enum
+{
+    CRC_RIGHT=0,
+    CRC_WRONG=1
+}CRC_STATE;
+
 typedef struct
 {
-	Fire_Mode_e fire_mode;
-	Target_State_e target_state;
-	Target_Type_e target_type;
-
-	float pitch;
-	float yaw;
+	struct 
+	{
+    	char   sof                ;
+    	int8_t fire_times         ;
+    	int16_t relative_pitch    ;
+    	int16_t relative_yaw      ;
+    	uint8_t reach_minute      ;
+    	uint8_t reach_second      ;
+    	uint16_t reach_second_frac;
+    	int16_t setting_voltage_or_rpm;
+    	uint32_t crc_check        ;
+	}ACTION_DATA;
+	struct
+	{
+    	char   sof                  ;
+    	uint8_t time_minute         ;
+    	uint8_t time_second         ;
+    	uint16_t time_second_frac   ;
+    	char null_7byte[7]          ;
+    	uint32_t crc_check          ;
+		float dwttime;
+	}SYN_DATA;
 } Vision_Recv_s;
 
 typedef enum
@@ -71,13 +104,15 @@ typedef enum
 
 typedef struct
 {
-	Enemy_Color_e enemy_color;
-	Work_Mode_e work_mode;
-	Bullet_Speed_e bullet_speed;
-
-	float yaw;
-	float pitch;
-	float roll;
+    char sof;
+    uint8_t time_minute;
+    uint8_t time_second;
+    uint16_t time_second_frac;
+    int16_t present_pitch;
+    int16_t present_yaw;
+    int16_t present_debug_value;
+    char null_byte;
+    uint32_t crc_value;
 } Vision_Send_s;
 #pragma pack()
 
@@ -94,21 +129,29 @@ Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle);
  */
 void VisionSend();
 
-/**
- * @brief 设置视觉发送标志位
- *
- * @param enemy_color
- * @param work_mode
- * @param bullet_speed
- */
-void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Speed_e bullet_speed);
+// /**
+//  * @brief 设置视觉发送标志位
+//  *
+//  * @param enemy_color
+//  * @param work_mode
+//  * @param bullet_speed
+//  */
+// void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Speed_e bullet_speed);
 
-/**
- * @brief 设置发送数据的姿态部分
- *
- * @param yaw
- * @param pitch
- */
-void VisionSetAltitude(float yaw, float pitch, float roll);
+// /**
+//  * @brief 设置发送数据的姿态部分
+//  *
+//  * @param yaw
+//  * @param pitch
+//  */
+// void VisionSetAltitude(float yaw, float pitch, float roll);
 
+void get_protocol_send_data(
+							uint8_t *tx_buf,			 // 待发送的原始数据	
+							uint8_t *tx_data			 // 待发送的数据
+							);	 // 待发送的数据帧长度
+
+/*接收数据处理*/
+uint16_t get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
+						   Vision_Recv_s *rx_data);			 // 接收的float数据存储地址
 #endif // !MASTER_PROCESS_H
