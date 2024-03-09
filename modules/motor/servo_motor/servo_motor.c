@@ -1,6 +1,7 @@
 #include "servo_motor.h"
 #include "stdlib.h"
 #include "memory.h"
+#include "bsp_log.h"
 
 extern TIM_HandleTypeDef htim1;
 /*第二版*/
@@ -20,6 +21,7 @@ ServoInstance *ServoInit(Servo_Init_Config_s *Servo_Init_Config)
 
     HAL_TIM_PWM_Start(Servo_Init_Config->htim, Servo_Init_Config->Channel);
     servo_motor_instance[servo_idx++] = servo;
+    PrintLog("ServoInit success");
     return servo;
 }
 

@@ -14,4 +14,6 @@ void RobotCMDInit();
  */
 void RobotCMDTask();
 
+// int16_t map_value(float value, float *ori_scope, float *target_scope);
+
 #endif // !ROBOT_CMD_H

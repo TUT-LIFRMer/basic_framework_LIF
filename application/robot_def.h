@@ -170,6 +170,8 @@ typedef struct
     Bullet_Speed_e bullet_speed; // 弹速枚举
     uint8_t rest_heat;
     float shoot_rate; // 连续发射的射频,unit per s,发/秒
+    int8_t shoot_num;  // 连续发射的弹数,负数表示反转
+    int8_t shoot_finish_flag; //射击完成标志
 } Shoot_Ctrl_Cmd_s;
 
 /* ----------------gimbal/shoot/chassis发布的反馈数据----------------*/
@@ -203,8 +205,8 @@ typedef struct
 
 typedef struct
 {
-    // code to go here
-    // ...
+    int8_t shoot_num; // 已发射的弹数,负数表示反转
+    int8_t shoot_finish_flag; //射击完成标志
 } Shoot_Upload_Data_s;
 
 #pragma pack() // 开启字节对齐,结束前面的#pragma pack(1)

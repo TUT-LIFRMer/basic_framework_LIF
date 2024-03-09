@@ -68,7 +68,9 @@
         "segger_rtt_conf.h": "c",
         "stdbool.h": "c",
         "seasky_protocol.h": "c",
-        "crc8.h": "c"
+        "crc8.h": "c",
+        "remote_control.h": "c",
+        "robot_cmd.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
