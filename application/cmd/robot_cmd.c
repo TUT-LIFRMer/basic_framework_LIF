@@ -171,8 +171,8 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-        gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ + */((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
-        gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 + */((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
+        gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ */gimbal_cmd_send.yaw + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
+        gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 */gimbal_cmd_send.pitch + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
         shoot_cmd_send.load_mode = LOAD_VISION;
         if (shoot_fetch_data.shoot_finish_flag == 1)
@@ -181,14 +181,6 @@ static void RemoteControlSet()
             shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
             shoot_cmd_send.load_mode = LOAD_STOP;
         }
-        
-        // if (shoot_fetch_data.shoot_finish_flag == 1)
-        // {
-        //     vision_recv_data->ACTION_DATA.fire_times = 0;
-        //     shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
-        //     shoot_cmd_send.shoot_finish_flag = 0;
-        // }
-        
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
         gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
@@ -409,8 +401,10 @@ void RobotCMDTask()
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
     vision_send_data.sof = 'P';
-    vision_send_data.present_pitch = (int16_t)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
-    vision_send_data.present_yaw = (int16_t)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
+    int send_pitch =  (int)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
+    int send_yaw =  (int)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
+    vision_send_data.present_pitch = (int16_t)(send_pitch>>16);
+    vision_send_data.present_yaw = (int16_t)(send_yaw>>16);
     vision_send_data.present_debug_value = 0;
     vision_send_data.null_byte = 0;
     VisionSend(&vision_send_data);
