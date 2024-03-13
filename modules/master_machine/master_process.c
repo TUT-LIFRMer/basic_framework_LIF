@@ -60,28 +60,38 @@ CRC_STATE check_data4_crc32(uint8_t *pbuffer,uint8_t length_4multi)
 */
 void get_protocol_send_data(
                             uint8_t *tx_buf,         // 待发送的数据帧
-                            uint8_t *tx_data          // 待发送的float数据
-                            
+                            Vision_Send_s *tx_data          // 待发送的float数据
+                
                             )    // 待发送的数据帧长度
 {
-    static uint32_t crc;
-    tx_buf[0] = tx_data[0];
-    tx_buf[1] = tx_data[1];
-    tx_buf[2] = tx_data[2];
-    tx_buf[3] = tx_data[4];
-    tx_buf[4] = tx_data[3];
-    tx_buf[5] = tx_data[6];
-    tx_buf[6] = tx_data[5];
-    tx_buf[7] = tx_data[8];
-    tx_buf[8] = tx_data[7];
-    tx_buf[9] = tx_data[10];
-    tx_buf[10] = tx_data[9];
-    tx_buf[11] = tx_data[11];
-    crc=HAL_CRC_Calculate(&hcrc, (uint32_t *)&tx_buf[0], CV_SEND_LENGTH/4-1);
-    tx_buf[12] = (uint8_t)(crc&0xff);
-    tx_buf[13] = (uint8_t)((crc>>8)&0xff);
-    tx_buf[14] = (uint8_t)((crc>>16)&0xff);
-    tx_buf[15] = (uint8_t)((crc>>24)&0xff);
+    uint16_t *pu16;
+    int16_t *pi16;
+    uint32_t *p32;
+
+
+    tx_buf[0] = tx_data->sof;
+    tx_buf[1] = tx_data->time_minute;
+    tx_buf[2] = tx_data->time_second;
+
+
+    pu16 = (uint16_t*)&tx_buf[3];
+    *pu16 = tx_data->time_second_frac;
+
+    pi16 = (int16_t*)&tx_buf[5];
+    *pi16 = tx_data->present_pitch;
+
+    pi16 = (int16_t*)&tx_buf[7];
+    *pi16 = tx_data->present_yaw;
+
+    pi16 = (int16_t*)&tx_buf[9];
+    *pi16 = tx_data->present_debug_value;
+
+    tx_buf[11] = tx_data->null_byte;
+
+    p32 = (uint32_t*)&tx_buf[0];
+    tx_data->crc_value=HAL_CRC_Calculate(&hcrc,p32,3);
+    p32 = (uint32_t*)&tx_buf[12];
+    *p32 = tx_data->crc_value;
 }
 /*
     此函数用于处理接收数据，
@@ -234,7 +244,7 @@ void VisionSend(Vision_Send_s *tx_data)
     tx_data->time_second = recv_data.SYN_DATA.time_second;
     tx_data->time_second_frac = recv_data.SYN_DATA.time_second_frac;
     
-    get_protocol_send_data(send_buff, (uint8_t *)tx_data);
+    get_protocol_send_data(send_buff, tx_data);
     USARTSend(vision_usart_instance, send_buff, sizeof(Vision_Send_s), USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
     // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.
     // 也可在发送完成中断中重新启动DMA接收,但较为复杂.因此,此处使用IT发送.

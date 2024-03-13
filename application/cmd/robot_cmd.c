@@ -201,9 +201,6 @@ static void RemoteControlSet()
             gimbal_cmd_send.pitch = -20;
         }
     }
-    if(switch_is_down(rc_data[TEMP].rc.switch_left)){
-        shoot_cmd_send.load_mode = LOAD_VISION;
-    }
     // 按照摇杆的输出大小进行角度增量,增益系数需调整
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整

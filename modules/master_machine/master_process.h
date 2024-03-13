@@ -113,7 +113,8 @@ typedef struct
     int16_t present_debug_value;
     char null_byte;
     uint32_t crc_value;
-} Vision_Send_s;
+} 
+Vision_Send_s;
 #pragma pack()
 
 /**
@@ -146,9 +147,9 @@ void VisionSend();
 //  */
 // void VisionSetAltitude(float yaw, float pitch, float roll);
 
-void get_protocol_send_data(
+extern void get_protocol_send_data(
 							uint8_t *tx_buf,			 // 待发送的原始数据	
-							uint8_t *tx_data			 // 待发送的数据
+							Vision_Send_s *tx_data			 // 待发送的数据
 							);	 // 待发送的数据帧长度
 
 /*接收数据处理*/
