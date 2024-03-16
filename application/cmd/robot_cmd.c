@@ -235,13 +235,13 @@ static void RemoteControlSet()
 static void MouseKeySet()
 {
     shoot_cmd_send.friction_mode = FRICTION_ON;
-    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].w * 30000 - rc_data[TEMP].key[KEY_PRESS].s * 30000; // 系数待测
-    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].s * 30000 - rc_data[TEMP].key[KEY_PRESS].d * 30000;
+    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].a * 30000 - rc_data[TEMP].key[KEY_PRESS].d * 30000; // 系数待测
+    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 30000 - rc_data[TEMP].key[KEY_PRESS].s * 30000;
 
     gimbal_cmd_send.yaw += (float)rc_data[TEMP].mouse.x / 660 * 10; // 系数待测
     gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660 * 10;
 
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z] % 3) // Z键设置弹速
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 3) // Z键设置弹速
     {
     case 0:
         shoot_cmd_send.bullet_speed = 15;
@@ -254,25 +254,25 @@ static void MouseKeySet()
         break;
     }
 
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_R] % 2) // R键开关弹舱
+    switch (rc_data[TEMP].key[KEY_PRESS].q) // R键开关弹舱
     {
     case 0:
-        shoot_cmd_send.lid_mode = LID_OPEN;
-        break;
-    default:
         shoot_cmd_send.lid_mode = LID_CLOSE;
         break;
-    }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
-    {
-    case 0:
-        shoot_cmd_send.friction_mode = FRICTION_OFF;
-        break;
     default:
-        shoot_cmd_send.friction_mode = FRICTION_ON;
+        shoot_cmd_send.lid_mode = LID_OPEN;
         break;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_C] % 4) // C键设置底盘速度
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
+    // {
+    // case 0:
+    //     shoot_cmd_send.friction_mode = FRICTION_OFF;
+    //     break;
+    // default:
+    //     shoot_cmd_send.friction_mode = FRICTION_ON;
+    //     break;
+    // }
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Ctrl] % 4) // C键设置底盘速度
     {
     case 0:
         chassis_cmd_send.chassis_speed_buff = 40;
@@ -303,7 +303,7 @@ static void MouseKeySet()
     }
     if (rc_data[TEMP].mouse.press_l == 1)
     {
-        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 4) // E键设置发射模式
+        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E]) // E键设置发射模式
         {
         case 0:
             shoot_cmd_send.load_mode = LOAD_STOP;
