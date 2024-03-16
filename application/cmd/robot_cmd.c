@@ -31,7 +31,7 @@ static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�
 
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
-static Vision_Send_s vision_send_data;  // 视觉发送数据
+// static Vision_Send_s vision_send_data;  // 视觉发送数据
 
 static Publisher_t *gimbal_cmd_pub;            // 云台控制消息发布者
 static Subscriber_t *gimbal_feed_sub;          // 云台反馈信息订阅者
@@ -76,6 +76,7 @@ void RobotCMDInit()
     gimbal_cmd_send.pitch = 0;
     vision_recv_data->ACTION_DATA.relative_pitch = 0;
     vision_recv_data->ACTION_DATA.relative_yaw = 0;
+    vision_recv_data->ACTION_DATA.fire_times = 0;
     shoot_cmd_send.shoot_mode = SHOOT_OFF;
     shoot_cmd_send.load_mode = LOAD_STOP;
     shoot_cmd_send.lid_mode = LID_CLOSE;
@@ -171,10 +172,12 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-        gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ */gimbal_cmd_send.yaw + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
-        gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 */gimbal_cmd_send.pitch + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
+        gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ */ ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
+        gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 */((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
         shoot_cmd_send.load_mode = LOAD_VISION;
+      
+      
         if (shoot_fetch_data.shoot_finish_flag == 1)
         {
             vision_recv_data->ACTION_DATA.fire_times = 0;
@@ -223,7 +226,6 @@ static void RemoteControlSet()
             shoot_cmd_send.load_mode = LOAD_STOP;
         }
     } 
-
 }
 
 /**
@@ -232,8 +234,9 @@ static void RemoteControlSet()
  */
 static void MouseKeySet()
 {
-    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].w * 300 - rc_data[TEMP].key[KEY_PRESS].s * 300; // 系数待测
-    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].s * 300 - rc_data[TEMP].key[KEY_PRESS].d * 300;
+    shoot_cmd_send.friction_mode = FRICTION_ON;
+    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].w * 30000 - rc_data[TEMP].key[KEY_PRESS].s * 30000; // 系数待测
+    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].s * 30000 - rc_data[TEMP].key[KEY_PRESS].d * 30000;
 
     gimbal_cmd_send.yaw += (float)rc_data[TEMP].mouse.x / 660 * 10; // 系数待测
     gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660 * 10;
@@ -250,21 +253,7 @@ static void MouseKeySet()
         shoot_cmd_send.bullet_speed = 30;
         break;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 4) // E键设置发射模式
-    {
-    case 0:
-        shoot_cmd_send.load_mode = LOAD_STOP;
-        break;
-    case 1:
-        shoot_cmd_send.load_mode = LOAD_1_BULLET;
-        break;
-    case 2:
-        shoot_cmd_send.load_mode = LOAD_3_BULLET;
-        break;
-    default:
-        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-        break;
-    }
+
     switch (rc_data[TEMP].key_count[KEY_PRESS][Key_R] % 2) // R键开关弹舱
     {
     case 0:
@@ -301,13 +290,41 @@ static void MouseKeySet()
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // 待添加 按shift允许超功率 消耗缓冲能量
     {
     case 1:
-
+        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
         break;
 
     default:
-
+        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         break;
     }
+    if (rc_data[TEMP].mouse.press_l == 0)
+    {
+        shoot_cmd_send.load_mode = LOAD_STOP;
+    }
+    if (rc_data[TEMP].mouse.press_l == 1)
+    {
+        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 4) // E键设置发射模式
+        {
+        case 0:
+            shoot_cmd_send.load_mode = LOAD_STOP;
+            break;
+        case 1:
+            shoot_cmd_send.load_mode = LOAD_1_BULLET;
+            shoot_cmd_send.shoot_num = 1;
+            if (shoot_fetch_data.shoot_finish_flag == 1)
+            {
+                shoot_cmd_send.shoot_num = 0;
+            }
+            break;
+        case 2:
+            shoot_cmd_send.load_mode = LOAD_3_BULLET;
+            break;
+        default:
+            shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+            break;
+        }
+    }
+    
 }
 
 /**
@@ -335,7 +352,7 @@ static void EmergencyHandler()
     {
         robot_state = ROBOT_READY;
         shoot_cmd_send.shoot_mode = SHOOT_ON;
-        LOGINFO("[CMD] reinstate, robot ready");
+                LOGINFO("[CMD] reinstate, robot ready");
     }
 }
 
@@ -359,7 +376,7 @@ void RobotCMDTask()
     {    
         RemoteControlSet();
     }
-    else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
+    else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制和相关模式选择
     {
         if (switch_is_down(rc_data[TEMP].rc.switch_right))
         {
@@ -400,12 +417,12 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
-    vision_send_data.sof = 'P';
-    int send_pitch =  (int)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
-    int send_yaw =  (int)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
-    vision_send_data.present_pitch = (int16_t)(send_pitch>>16);
-    vision_send_data.present_yaw = (int16_t)(send_yaw>>16);
-    vision_send_data.present_debug_value = 0;
-    vision_send_data.null_byte = 0;
-    VisionSend(&vision_send_data);
+    // vision_send_data.sof = 'P';
+    // int send_pitch =  (int)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
+    // int send_yaw =  (int)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
+    // vision_send_data.present_pitch = (int16_t)(send_pitch>>16);
+    // vision_send_data.present_yaw = (int16_t)(send_yaw>>16);
+    // vision_send_data.present_debug_value = 0;
+    // vision_send_data.null_byte = 0;
+    // VisionSend(&vision_send_data);
 }

@@ -6,6 +6,7 @@
 #include "general_def.h"
 #include "bsp_log.h"
 #include "bmi088.h"
+#include "master_process.h"
 
 static attitude_t *gimba_IMU_data; // 云台IMU数据
 static DJIMotorInstance *yaw_motor, *pitch_motor;
@@ -13,6 +14,7 @@ static Publisher_t *gimbal_pub;                   // 云台应用消息发布者
 static Subscriber_t *gimbal_sub;     // cmd控制消息订阅者
 static Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态信息
 static Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
+static Vision_Send_s vision_send_data; // 云台视觉数据 
 
 void GimbalInit()
 {
@@ -25,7 +27,7 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = 8, // 8
+                .Kp = 10, // 8
                 .Ki = 6,
                 .Kd = 1,
                 .DeadBand = 0.1,
@@ -148,6 +150,16 @@ void GimbalTask()
     gimbal_feedback_data.gimbal_imu_data = *gimba_IMU_data;
     gimbal_feedback_data.yaw_motor_single_round_angle = yaw_motor->measure.angle_single_round;
 
+    vision_send_data.sof = 'P';
+    static int send_pitch;
+    static int send_yaw;
+    send_pitch =  (int)(gimbal_feedback_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
+    send_yaw =  (int)(gimbal_feedback_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
+    vision_send_data.present_pitch = (int16_t)((send_pitch<<16)>>16);
+    vision_send_data.present_yaw = (int16_t)((send_yaw<<16)>>16);
+    vision_send_data.present_debug_value = 0;
+    vision_send_data.null_byte = 0;
+    VisionSend(&vision_send_data);
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
 }

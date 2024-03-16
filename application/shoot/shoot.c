@@ -27,8 +27,8 @@ void ShootInit()
         .controller_param_init_config = {
             .speed_PID = {
                 .Kp = 20, // 20
-                .Ki = 1, // 1
-                .Kd = 2,
+                .Ki = 10, // 1
+                .Kd = 5,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
                 .MaxOut = 15000,
@@ -113,16 +113,15 @@ void ShootInit()
 /* 机器人发射机构控制核心任务 */
 void ShootTask()
 {
-    shoot_feedback_data.shoot_finish_flag = 0; // 重置发射完成标志位
     // 从cmd获取控制数据
     SubGetMessage(shoot_sub, &shoot_cmd_recv);
 
     // 对shoot mode等于SHOOT_STOP的情况特殊处理,直接停止所有电机(紧急停止)
     if (shoot_cmd_recv.shoot_mode == SHOOT_OFF)
-    {
+        {
         DJIMotorStop(friction_l);
         DJIMotorStop(friction_r);
-        DJIMotorStop(loader);
+    DJIMotorStop(loader);
     }
     else // 恢复运行
     {
@@ -130,8 +129,8 @@ void ShootTask()
         DJIMotorEnable(friction_r);
         DJIMotorEnable(loader);
     }
-
-    // 如果上一次触发单发或3发指令的时间加上不应期仍然大于当前时间(尚未休眠完毕),直接返回即可
+    
+        // 如果上一次触发单发或3发指令的时间加上不应期仍然大于当前时间(尚未休眠完毕),直接返回即可
     // 单发模式主要提供给能量机关激活使用(以及英雄的射击大部分处于单发)
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
     if (shoot_cmd_recv.friction_mode == FRICTION_ON)
@@ -148,8 +147,8 @@ void ShootTask()
             DJIMotorSetRef(friction_r, 0);
             break;
         case SMALL_AMU_30:
-            DJIMotorSetRef(friction_l, 20000);
-            DJIMotorSetRef(friction_r, 20000);
+            DJIMotorSetRef(friction_l, 57295);
+            DJIMotorSetRef(friction_r, 57295);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
             DJIMotorSetRef(friction_l, 30000);
@@ -177,7 +176,7 @@ void ShootTask()
         {
             shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
         }
-        
+            
     }
 
     //视觉发射控制
@@ -192,12 +191,12 @@ void ShootTask()
         {
             shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
         }
-        
+            
     }
     // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
     switch (shoot_cmd_recv.load_mode)
     {
-    // 停止拨盘
+        // 停止拨盘
     case LOAD_STOP:
         DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
         DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
@@ -213,8 +212,8 @@ void ShootTask()
         break;
     // 三连发,如果不需要后续可能删除
     case LOAD_3_BULLET:
-        // DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
-        // DJIMotorSetRef(loader, loader->measure.total_angle + 3 * ONE_BULLET_DELTA_ANGLE); // 增加3发
+        DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
+        DJIMotorSetRef(loader, loader->measure.total_angle + 45 *3 * ONE_BULLET_DELTA_ANGLE); // 增加3发
         // hibernate_time = DWT_GetTimeline_ms();                                                  // 记录触发指令的时间
         // dead_time = 300;                                                                        // 完成3发弹丸发射的时间
         break;
@@ -241,6 +240,8 @@ void ShootTask()
             ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
     }
 
+
+
     
 
 
@@ -249,12 +250,12 @@ void ShootTask()
     if (shoot_cmd_recv.lid_mode == LID_CLOSE)
     {
         Servo_Motor_Type_Select(lid, Free_Angle_mode);
-        Servo_Motor_FreeAngle_Set(lid, 50);
+        Servo_Motor_FreeAngle_Set(lid, 35);//白车50度,黑车35度
     }
     else if (shoot_cmd_recv.lid_mode == LID_OPEN)
     {
         Servo_Motor_Type_Select(lid, Free_Angle_mode);
-        Servo_Motor_FreeAngle_Set(lid, 150);
+        Servo_Motor_FreeAngle_Set(lid, 135);
     }
 
     // 反馈数据,目前暂时没有要设定的反馈数据,后续可能增加应用离线监测以及卡弹反馈
