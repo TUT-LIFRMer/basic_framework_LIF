@@ -234,55 +234,68 @@ static void RemoteControlSet()
  */
 static void MouseKeySet()
 {
-    shoot_cmd_send.friction_mode = FRICTION_ON;
-    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].a * 30000 - rc_data[TEMP].key[KEY_PRESS].d * 30000; // 系数待测
-    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 30000 - rc_data[TEMP].key[KEY_PRESS].s * 30000;
+    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].a * 3000 - rc_data[TEMP].key[KEY_PRESS].d * 3000; // 系数待测
+    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 3000 - rc_data[TEMP].key[KEY_PRESS].s * 3000;
 
-    gimbal_cmd_send.yaw += (float)rc_data[TEMP].mouse.x / 660 * 10; // 系数待测
-    gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660 * 10;
+    gimbal_cmd_send.yaw -= (float)rc_data[TEMP].mouse.x / 660*5; // 系数待测
+    gimbal_cmd_send.pitch -= (float)rc_data[TEMP].mouse.y / 660*5;
+    // SEGGER_RTT_SetTerminal(1);//设置显示的终端
+    // sprintf(printf_buf,"mouse.x=%f\r\n,mouse.y=%f\r\n",gimbal_cmd_send.yaw,gimbal_cmd_send.pitch);
+    // SEGGER_RTT_WriteString(0, printf_buf);
 
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 3) // Z键设置弹速
+    if (gimbal_cmd_send.pitch > 50)
+    {
+        gimbal_cmd_send.pitch = 50;
+    }
+    if (gimbal_cmd_send.pitch < -20)
+    {
+        gimbal_cmd_send.pitch = -20;
+    }
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 2) // Z键设置弹速
     {
     case 0:
         shoot_cmd_send.bullet_speed = 15;
         break;
-    case 1:
-        shoot_cmd_send.bullet_speed = 18;
-        break;
+    
     default:
         shoot_cmd_send.bullet_speed = 30;
         break;
     }
 
-    switch (rc_data[TEMP].key[KEY_PRESS].q) // R键开关弹舱
+    switch (rc_data[TEMP].key[KEY_PRESS].r) // R键开关弹舱
     {
     case 0:
         shoot_cmd_send.lid_mode = LID_CLOSE;
         break;
+    
     default:
         shoot_cmd_send.lid_mode = LID_OPEN;
         break;
     }
-    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
-    // {
-    // case 0:
-    //     shoot_cmd_send.friction_mode = FRICTION_OFF;
-    //     break;
-    // default:
-    //     shoot_cmd_send.friction_mode = FRICTION_ON;
-    //     break;
-    // }
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
+    {
+    case 0:
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+        break;
+    
+    default:
+        shoot_cmd_send.friction_mode = FRICTION_ON;
+        break;
+    }
     switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Ctrl] % 4) // C键设置底盘速度
     {
     case 0:
         chassis_cmd_send.chassis_speed_buff = 40;
         break;
+    
     case 1:
         chassis_cmd_send.chassis_speed_buff = 60;
         break;
+    
     case 2:
         chassis_cmd_send.chassis_speed_buff = 80;
         break;
+    
     default:
         chassis_cmd_send.chassis_speed_buff = 100;
         break;
@@ -297,18 +310,26 @@ static void MouseKeySet()
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         break;
     }
+    switch (rc_data[TEMP].key[KEY_PRESS].ctrl)
+    {
+    case 1:
+        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
+        break;
+    
+    default:
+        gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
+        break;
+    }
     if (rc_data[TEMP].mouse.press_l == 0)
     {
         shoot_cmd_send.load_mode = LOAD_STOP;
     }
     if (rc_data[TEMP].mouse.press_l == 1)
     {
-        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E]) // E键设置发射模式
+        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // E键设置发射模式
         {
         case 0:
-            shoot_cmd_send.load_mode = LOAD_STOP;
-            break;
-        case 1:
             shoot_cmd_send.load_mode = LOAD_1_BULLET;
             shoot_cmd_send.shoot_num = 1;
             if (shoot_fetch_data.shoot_finish_flag == 1)
@@ -316,11 +337,11 @@ static void MouseKeySet()
                 shoot_cmd_send.shoot_num = 0;
             }
             break;
-        case 2:
-            shoot_cmd_send.load_mode = LOAD_3_BULLET;
-            break;
-        default:
+        
+        case 1:
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+            shoot_cmd_send.shoot_rate = 8;
+            shoot_cmd_send.shoot_num = 0;
             break;
         }
     }

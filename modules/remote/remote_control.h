@@ -47,10 +47,10 @@
 #define Key_S 1
 #define Key_A 2
 #define Key_D 3
-#define Key_Q 4
-#define Key_E 5
-#define Key_Shift 6
-#define Key_Ctrl 7
+#define Key_Shift 4
+#define Key_Ctrl 5
+#define Key_Q 6
+#define Key_E 7
 #define Key_R 8
 #define Key_F 9
 #define Key_G 10
@@ -70,10 +70,10 @@ typedef union
         uint16_t s : 1;
         uint16_t a : 1;
         uint16_t d : 1;
-        uint16_t q : 1;
-        uint16_t e : 1;
         uint16_t shift : 1;
         uint16_t ctrl : 1;
+        uint16_t q : 1;
+        uint16_t e : 1;
         uint16_t r : 1;
         uint16_t f : 1;
         uint16_t g : 1;

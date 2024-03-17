@@ -126,6 +126,9 @@ void GimbalTask()
         DJIMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); // yaw和pitch会在robot_cmd中处理好多圈和单圈
         DJIMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
+        SEGGER_RTT_SetTerminal(1);//设置显示的终端
+        sprintf(printf_buf,"mouse.x=%f\r\n,mouse.y=%f\r\n",gimbal_cmd_recv.yaw,gimbal_cmd_recv.pitch);
+        SEGGER_RTT_WriteString(0, printf_buf);
         break;
     // 云台自由模式,使用编码器反馈,底盘和云台分离,仅云台旋转,一般用于调整云台姿态(英雄吊射等)/能量机关
     case GIMBAL_FREE_MODE: // 后续删除,或加入云台追地盘的跟随模式(响应速度更快)

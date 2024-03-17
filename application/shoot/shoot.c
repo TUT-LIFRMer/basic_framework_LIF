@@ -118,10 +118,10 @@ void ShootTask()
 
     // 对shoot mode等于SHOOT_STOP的情况特殊处理,直接停止所有电机(紧急停止)
     if (shoot_cmd_recv.shoot_mode == SHOOT_OFF)
-        {
+    {
         DJIMotorStop(friction_l);
         DJIMotorStop(friction_r);
-    DJIMotorStop(loader);
+        DJIMotorStop(loader);
     }
     else // 恢复运行
     {
@@ -155,91 +155,91 @@ void ShootTask()
             DJIMotorSetRef(friction_r, 30000);
             break;
         }
+
+        // if (hibernate_time + dead_time > DWT_GetTimeline_ms()){        
+        //     return;
+        // }
+        //单发控制
+        if ((shoot_cmd_recv.load_mode == LOAD_1_BULLET) && (shoot_cmd_recv.shoot_num >= 1))
+        {
+            DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
+            DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45)); // 控制量增加一发弹丸的角度
+            shoot_feedback_data.shoot_num = shoot_cmd_recv.shoot_num - 1; // 反馈发射数量;
+            // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
+            // dead_time = 125;   
+            if (shoot_feedback_data.shoot_num == 0)
+            {
+                shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
+            }
+                
+        }
+
+        //视觉发射控制
+        if ((shoot_cmd_recv.load_mode == LOAD_VISION) && (shoot_cmd_recv.shoot_num >= 1))
+        {
+            DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
+            DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
+            shoot_feedback_data.shoot_num = 0; // 反馈发射数量;
+            // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
+            // dead_time = 125*shoot_cmd_recv.shoot_num;   
+            if (shoot_feedback_data.shoot_num == 0)
+            {
+                shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
+            }
+                
+        }
+        // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
+        switch (shoot_cmd_recv.load_mode)
+        {
+            // 停止拨盘
+        case LOAD_STOP:
+            DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
+            DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
+            shoot_feedback_data.shoot_finish_flag = 0;
+            break;
+        // 单发模式,根据鼠标按下的时间,触发一次之后需要进入不响应输入的状态(否则按下的时间内可能多次进入,导致多次发射)
+        case LOAD_1_BULLET:                                                                     // 激活能量机关/干扰对方用,英雄用.
+            // DJIMotorOuterLoop(loader, SPEED_LOOP);                                              // 切换到角度环
+            // DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8); // 控制量增加一发弹丸的角度
+
+            // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
+            // dead_time = 125;                                                                    // 完成1发弹丸发射的时间
+            break;
+        // 三连发,如果不需要后续可能删除
+        case LOAD_3_BULLET:
+            DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
+            DJIMotorSetRef(loader, loader->measure.total_angle + 45 *3 * ONE_BULLET_DELTA_ANGLE); // 增加3发
+            // hibernate_time = DWT_GetTimeline_ms();                                                  // 记录触发指令的时间
+            // dead_time = 300;                                                                        // 完成3发弹丸发射的时间
+            break;
+        // 连发模式,对速度闭环,射频后续修改为可变,目前固定为1Hz
+        case LOAD_BURSTFIRE:
+            DJIMotorOuterLoop(loader, SPEED_LOOP);
+            DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
+            shoot_feedback_data.shoot_finish_flag = 0;
+            // x颗/秒换算成速度: 已知一圈的载弹量,由此计算出1s需要转的角度,注意换算角速度(DJIMotor的速度单位是angle per second)
+            break;
+        // 拨盘反转,对速度闭环,后续增加卡弹检测(通过裁判系统剩余热量反馈和电机电流)
+        // 也有可能需要从switch-case中独立出来
+        case LOAD_REVERSE:
+            DJIMotorOuterLoop(loader, SPEED_LOOP);
+            // ...
+            break;
+        case LOAD_VISION:
+            // DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
+            // DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
+            // shoot_feedback_data.shoot_num = 0;
+            break;
+        default:
+            while (1)
+                ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
+        }
     }
     else // 关闭摩擦轮
     {
         DJIMotorSetRef(friction_l, 0);
         DJIMotorSetRef(friction_r, 0);
     }
-    // if (hibernate_time + dead_time > DWT_GetTimeline_ms()){        
-    //     return;
-    // }
-    //单发控制
-    if ((shoot_cmd_recv.load_mode == LOAD_1_BULLET) && (shoot_cmd_recv.shoot_num >= 1))
-    {
-        DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
-        DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45)); // 控制量增加一发弹丸的角度
-        shoot_feedback_data.shoot_num = shoot_cmd_recv.shoot_num - 1; // 反馈发射数量;
-        // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
-        // dead_time = 125;   
-        if (shoot_feedback_data.shoot_num == 0)
-        {
-            shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
-        }
-            
-    }
-
-    //视觉发射控制
-    if ((shoot_cmd_recv.load_mode == LOAD_VISION) && (shoot_cmd_recv.shoot_num >= 1))
-    {
-        DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
-        DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
-        shoot_feedback_data.shoot_num = 0; // 反馈发射数量;
-        // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
-        // dead_time = 125*shoot_cmd_recv.shoot_num;   
-        if (shoot_feedback_data.shoot_num == 0)
-        {
-            shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
-        }
-            
-    }
-    // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
-    switch (shoot_cmd_recv.load_mode)
-    {
-        // 停止拨盘
-    case LOAD_STOP:
-        DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
-        DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
-        shoot_feedback_data.shoot_finish_flag = 0;
-        break;
-    // 单发模式,根据鼠标按下的时间,触发一次之后需要进入不响应输入的状态(否则按下的时间内可能多次进入,导致多次发射)
-    case LOAD_1_BULLET:                                                                     // 激活能量机关/干扰对方用,英雄用.
-        // DJIMotorOuterLoop(loader, SPEED_LOOP);                                              // 切换到角度环
-        // DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8); // 控制量增加一发弹丸的角度
-
-        // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
-        // dead_time = 125;                                                                    // 完成1发弹丸发射的时间
-        break;
-    // 三连发,如果不需要后续可能删除
-    case LOAD_3_BULLET:
-        DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
-        DJIMotorSetRef(loader, loader->measure.total_angle + 45 *3 * ONE_BULLET_DELTA_ANGLE); // 增加3发
-        // hibernate_time = DWT_GetTimeline_ms();                                                  // 记录触发指令的时间
-        // dead_time = 300;                                                                        // 完成3发弹丸发射的时间
-        break;
-    // 连发模式,对速度闭环,射频后续修改为可变,目前固定为1Hz
-    case LOAD_BURSTFIRE:
-        DJIMotorOuterLoop(loader, SPEED_LOOP);
-        DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
-        shoot_feedback_data.shoot_finish_flag = 0;
-        // x颗/秒换算成速度: 已知一圈的载弹量,由此计算出1s需要转的角度,注意换算角速度(DJIMotor的速度单位是angle per second)
-        break;
-    // 拨盘反转,对速度闭环,后续增加卡弹检测(通过裁判系统剩余热量反馈和电机电流)
-    // 也有可能需要从switch-case中独立出来
-    case LOAD_REVERSE:
-        DJIMotorOuterLoop(loader, SPEED_LOOP);
-        // ...
-        break;
-    case LOAD_VISION:
-        // DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
-        // DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
-        // shoot_feedback_data.shoot_num = 0;
-        break;
-    default:
-        while (1)
-            ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
-    }
-
 
 
     
