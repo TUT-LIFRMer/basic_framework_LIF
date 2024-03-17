@@ -30,7 +30,7 @@ void UIDelete(referee_id_t *_id, uint8_t Del_Operate, uint8_t Del_Layer)
 	UI_delete_data.FrameHeader.Seq = UI_Seq;
 	UI_delete_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_delete_data, LEN_CRC8, 0xFF);
 
-	UI_delete_data.CmdID = ID_student_interactive;
+	// UI_delete_data.CmdID = ID_student_interactive;
 
 	UI_delete_data.datahead.data_cmd_id = UI_Data_ID_Del;
 	UI_delete_data.datahead.receiver_ID = _id->Cilent_ID;
@@ -362,7 +362,7 @@ void UIGraphRefresh(referee_id_t *_id, int cnt, ...)
 	UI_GraphReFresh_data.FrameHeader.Seq = UI_Seq;
 	UI_GraphReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_GraphReFresh_data, LEN_CRC8, 0xFF);
 
-	UI_GraphReFresh_data.CmdID = ID_student_interactive;
+	// UI_GraphReFresh_data.CmdID = ID_student_interactive;
 
 	switch (cnt)
 	{
@@ -407,7 +407,7 @@ void UICharRefresh(referee_id_t *_id, String_Data_t string_Data)
 	UI_CharReFresh_data.FrameHeader.Seq = UI_Seq;
 	UI_CharReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_CRC8, 0xFF);
 
-	UI_CharReFresh_data.CmdID = ID_student_interactive;
+	// UI_CharReFresh_data.CmdID = ID_student_interactive;
 
 	UI_CharReFresh_data.datahead.data_cmd_id = UI_Data_ID_DrawChar;
 

@@ -239,9 +239,6 @@ static void MouseKeySet()
 
     gimbal_cmd_send.yaw -= (float)rc_data[TEMP].mouse.x / 660*5; // 系数待测
     gimbal_cmd_send.pitch -= (float)rc_data[TEMP].mouse.y / 660*5;
-    // SEGGER_RTT_SetTerminal(1);//设置显示的终端
-    // sprintf(printf_buf,"mouse.x=%f\r\n,mouse.y=%f\r\n",gimbal_cmd_send.yaw,gimbal_cmd_send.pitch);
-    // SEGGER_RTT_WriteString(0, printf_buf);
 
     if (gimbal_cmd_send.pitch > 50)
     {

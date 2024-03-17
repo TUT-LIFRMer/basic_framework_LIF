@@ -82,25 +82,25 @@ typedef enum
 	ID_aerial_robot_energy = 0x0205,	   // 空中机器人能量状态数据
 	ID_robot_hurt = 0x0206,				   // 伤害状态数据
 	ID_shoot_data = 0x0207,				   // 实时射击数据
-	ID_student_interactive = 0x0301,	   // 机器人间交互数据
+	ID_shoot_num = 0x0208,				   // 发弹量数据
 } CmdID_e;
 
 /* 命令码数据段长,根据官方协议来定义长度，还有自定义数据长度 */
 typedef enum
 {
-	LEN_game_state = 3,							 // 0x0001
+	LEN_game_state = 11,							 // 0x0001
 	LEN_game_result = 1,						 // 0x0002
-	LEN_game_robot_HP = 2,						 // 0x0003
+	LEN_game_robot_HP = 32,						 // 0x0003
 	LEN_event_data = 4,							 // 0x0101
 	LEN_supply_projectile_action = 4,			 // 0x0102
-	LEN_game_robot_state = 27,					 // 0x0201
-	LEN_power_heat_data = 14,					 // 0x0202
+	LEN_game_robot_state = 13,					 // 0x0201
+	LEN_power_heat_data = 16,					 // 0x0202
 	LEN_game_robot_pos = 16,					 // 0x0203
-	LEN_buff_musk = 1,							 // 0x0204
-	LEN_aerial_robot_energy = 1,				 // 0x0205
+	LEN_buff_musk = 6,							 // 0x0204
+	LEN_aerial_robot_energy = 2,				 // 0x0205
 	LEN_robot_hurt = 1,							 // 0x0206
 	LEN_shoot_data = 7,							 // 0x0207
-	LEN_receive_data = 6 + Communicate_Data_LEN, // 0x0301
+	LEN_shoot_num = 6,							 // 0x0208
 
 } JudgeDataLength_e;
 
@@ -110,9 +110,10 @@ typedef enum
 /* ID: 0x0001  Byte:  3    比赛状态数据 */
 typedef struct
 {
-	uint8_t game_type : 4;
-	uint8_t game_progress : 4;
-	uint16_t stage_remain_time;
+ 	uint8_t game_type : 4;
+ 	uint8_t game_progress : 4;
+ 	uint16_t stage_remain_time;
+ 	uint64_t SyncTimeStamp;
 } ext_game_state_t;
 
 /* ID: 0x0002  Byte:  1    比赛结果数据 */
@@ -151,7 +152,7 @@ typedef struct
 /* ID: 0x0102  Byte:  3    场地补给站动作标识数据 */
 typedef struct
 {
-	uint8_t supply_projectile_id;
+	uint8_t reserved;
 	uint8_t supply_robot_id;
 	uint8_t supply_projectile_step;
 	uint8_t supply_projectile_num;
@@ -162,32 +163,26 @@ typedef struct
 {
 	uint8_t robot_id;
 	uint8_t robot_level;
-	uint16_t remain_HP;
-	uint16_t max_HP;
-	uint16_t shooter_id1_17mm_cooling_rate;
-	uint16_t shooter_id1_17mm_cooling_limit;
-	uint16_t shooter_id1_17mm_speed_limit;
-	uint16_t shooter_id2_17mm_cooling_rate;
-	uint16_t shooter_id2_17mm_cooling_limit;
-	uint16_t shooter_id2_17mm_speed_limit;
-	uint16_t shooter_id1_42mm_cooling_rate;
-	uint16_t shooter_id1_42mm_cooling_limit;
-	uint16_t shooter_id1_42mm_speed_limit;
+	uint16_t current_HP; 
+	uint16_t maximum_HP;
+	uint16_t shooter_barrel_cooling_value;
+	uint16_t shooter_barrel_heat_limit;
 	uint16_t chassis_power_limit;
-	uint8_t mains_power_gimbal_output : 1;
-	uint8_t mains_power_chassis_output : 1;
-	uint8_t mains_power_shooter_output : 1;
+	uint8_t power_management_gimbal_output : 1;
+	uint8_t power_management_chassis_output : 1; 
+	uint8_t power_management_shooter_output : 1;
 } ext_game_robot_state_t;
 
 /* ID: 0X0202  Byte: 14    实时功率热量数据 */
 typedef struct
 {
-	uint16_t chassis_volt;
+	uint16_t chassis_voltage;
 	uint16_t chassis_current;
-	float chassis_power;		   // 瞬时功率
-	uint16_t chassis_power_buffer; // 60焦耳缓冲能量
-	uint16_t shooter_heat0;		   // 17mm
-	uint16_t shooter_heat1;
+	float chassis_power;		//底盘功率
+	uint16_t buffer_energy;		//缓冲能量
+	uint16_t shooter_17mm_1_barrel_heat;
+	uint16_t shooter_17mm_2_barrel_heat;
+	uint16_t shooter_42mm_barrel_heat;
 } ext_power_heat_data_t;
 
 /* ID: 0x0203  Byte: 16    机器人位置数据 */
@@ -195,37 +190,52 @@ typedef struct
 {
 	float x;
 	float y;
-	float z;
-	float yaw;
+	float angle;
 } ext_game_robot_pos_t;
 
 /* ID: 0x0204  Byte:  1    机器人增益数据 */
 typedef struct
 {
-	uint8_t power_rune_buff;
+	uint8_t recovery_buff;
+	uint8_t cooling_buff;
+	uint8_t defence_buff;
+	uint8_t vulnerability_buff;
+	uint16_t attack_buff;
 } ext_buff_musk_t;
 
 /* ID: 0x0205  Byte:  1    空中机器人能量状态数据 */
 typedef struct
 {
-	uint8_t attack_time;
+	uint8_t airforce_status;
+	uint8_t time_remain;
 } aerial_robot_energy_t;
 
 /* ID: 0x0206  Byte:  1    伤害状态数据 */
 typedef struct
 {
 	uint8_t armor_id : 4;
-	uint8_t hurt_type : 4;
+	uint8_t HP_deduction_reason : 4;
 } ext_robot_hurt_t;
 
 /* ID: 0x0207  Byte:  7    实时射击数据 */
 typedef struct
 {
 	uint8_t bullet_type;
-	uint8_t shooter_id;
-	uint8_t bullet_freq;
-	float bullet_speed;
+	uint8_t shooter_number;
+	uint8_t launching_frequency;
+	float initial_speed;
 } ext_shoot_data_t;
+
+/*ID: 0x0208  Byte:  6    发弹量数据 */
+typedef struct
+{
+ uint16_t projectile_allowance_17mm;
+ uint16_t projectile_allowance_42mm;
+ uint16_t remaining_gold_coin;
+}ext_shoot_num_and_gold_coin_t;
+
+
+
 
 /****************************机器人交互数据****************************/
 /****************************机器人交互数据****************************/

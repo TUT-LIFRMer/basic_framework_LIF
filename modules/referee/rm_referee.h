@@ -37,7 +37,7 @@ typedef struct
 	aerial_robot_energy_t AerialRobotEnergy;			   // 0x0205
 	ext_robot_hurt_t RobotHurt;							   // 0x0206
 	ext_shoot_data_t ShootData;							   // 0x0207
-
+	ext_shoot_num_and_gold_coin_t ShootNumAndGoldCoin;	   // 0x0208
 	// 自定义交互数据的接收
 	Communicate_ReceiveData_t ReceiveData;
 

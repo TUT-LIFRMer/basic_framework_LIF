@@ -71,7 +71,10 @@
         "crc8.h": "c",
         "remote_control.h": "c",
         "robot_cmd.h": "c",
-        "usart.h": "c"
+        "usart.h": "c",
+        "referee_ui.h": "c",
+        "freertos.h": "c",
+        "referee_protocol.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
