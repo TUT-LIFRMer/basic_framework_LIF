@@ -340,24 +340,6 @@ static void MouseKeySet()
         shoot_cmd_send.bullet_speed = 30;
         break;
     }
-    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Ctrl] % 4) // C键设置底盘速度
-    // {
-    // case 0:
-    //     chassis_cmd_send.chassis_speed_buff = 40;
-    //     break;
-    
-    // case 1:
-    //     chassis_cmd_send.chassis_speed_buff = 60;
-    //     break;
-    
-    // case 2:
-    //     chassis_cmd_send.chassis_speed_buff = 80;
-    //     break;
-    
-    // default:
-    //     chassis_cmd_send.chassis_speed_buff = 100;
-    //     break;
-    // }
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // 小陀螺
     {
     case 1:
@@ -383,23 +365,35 @@ static void MouseKeySet()
     {
         shoot_cmd_send.load_mode = LOAD_STOP;
     }
+    switch (rc_data[TEMP].key[KEY_PRESS].c) // C键设置播弹盘反转
+    {
+    case 0:
+
+        break;
+
+    default:
+        shoot_cmd_send.load_mode = LOAD_REVERSE;
+        shoot_cmd_send.shoot_rate = 8;
+        shoot_cmd_send.shoot_num = 0;
+        break;
+    }
     if (rc_data[TEMP].mouse.press_l == 1)
     {
         switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // z键设置发射模式
         {
         case 0:
+            shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+            shoot_cmd_send.shoot_rate = 8;
+            shoot_cmd_send.shoot_num = 0;
+            break;
+        
+        case 1:
             shoot_cmd_send.load_mode = LOAD_1_BULLET;
             shoot_cmd_send.shoot_num = 1;
             if (shoot_fetch_data.shoot_finish_flag == 1)
             {
                 shoot_cmd_send.shoot_num = 0;
             }
-            break;
-        
-        case 1:
-            shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-            shoot_cmd_send.shoot_rate = 8;
-            shoot_cmd_send.shoot_num = 0;
             break;
         }
     }
