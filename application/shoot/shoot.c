@@ -240,12 +240,12 @@ void ShootTask()
     if (shoot_cmd_recv.lid_mode == LID_CLOSE)
     {
         Servo_Motor_Type_Select(lid, Free_Angle_mode);
-        Servo_Motor_FreeAngle_Set(lid, 35);//白车50度,黑车35度
+        Servo_Motor_FreeAngle_Set(lid, 50);
     }
     else if (shoot_cmd_recv.lid_mode == LID_OPEN)
     {
         Servo_Motor_Type_Select(lid, Free_Angle_mode);
-        Servo_Motor_FreeAngle_Set(lid, 135);
+        Servo_Motor_FreeAngle_Set(lid, 150);
     }
 
     // 反馈数据,目前暂时没有要设定的反馈数据,后续可能增加应用离线监测以及卡弹反馈
