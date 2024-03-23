@@ -234,8 +234,77 @@ static void RemoteControlSet()
  */
 static void MouseKeySet()
 {
-    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].a * 3000 - rc_data[TEMP].key[KEY_PRESS].d * 3000; // 系数待测
-    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 3000 - rc_data[TEMP].key[KEY_PRESS].s * 3000;
+    if (chassis_fetch_data.chassis_power_limit == 70)
+    {
+        chassis_cmd_send.chassis_speed_buff = 20000;
+    }
+    else if(chassis_fetch_data.chassis_power_limit == 75)
+    {
+        chassis_cmd_send.chassis_speed_buff = 22000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 80)
+    {
+        chassis_cmd_send.chassis_speed_buff = 24000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 85)
+    {
+        chassis_cmd_send.chassis_speed_buff = 26000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 90)
+    {
+        chassis_cmd_send.chassis_speed_buff = 28000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 95)
+    {
+        chassis_cmd_send.chassis_speed_buff = 30000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 100)
+    {
+        chassis_cmd_send.chassis_speed_buff = 32000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 105)
+    {
+        chassis_cmd_send.chassis_speed_buff = 34000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 110)
+    {
+        chassis_cmd_send.chassis_speed_buff = 36000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 120)
+    {
+        chassis_cmd_send.chassis_speed_buff = 38000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 55)
+    {
+        chassis_cmd_send.chassis_speed_buff = 14000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 60)
+    {
+        chassis_cmd_send.chassis_speed_buff = 16000;
+    }
+    else if (chassis_fetch_data.chassis_power_limit == 65)
+    {
+        chassis_cmd_send.chassis_speed_buff = 18000;
+    }
+    else{
+        chassis_cmd_send.chassis_speed_buff = 15000;
+    }
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) 
+    {
+    case 0:
+        break;
+    case 1:
+        chassis_cmd_send.chassis_speed_buff = 15000;
+        break;
+    case 2:
+        chassis_cmd_send.chassis_speed_buff = 28000;
+        break;
+    default:
+        chassis_cmd_send.chassis_speed_buff = 35000;
+        break;
+    }
+    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].a * chassis_cmd_send.chassis_speed_buff; // 系数待测
+    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
 
     gimbal_cmd_send.yaw -= (float)rc_data[TEMP].mouse.x / 660*5; // 系数待测
     gimbal_cmd_send.pitch -= (float)rc_data[TEMP].mouse.y / 660*5;
@@ -248,16 +317,7 @@ static void MouseKeySet()
     {
         gimbal_cmd_send.pitch = -20;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 2) // Z键设置弹速
-    {
-    case 0:
-        shoot_cmd_send.bullet_speed = 15;
-        break;
-    
-    default:
-        shoot_cmd_send.bullet_speed = 30;
-        break;
-    }
+
 
     switch (rc_data[TEMP].key[KEY_PRESS].r) // R键开关弹舱
     {
@@ -277,27 +337,28 @@ static void MouseKeySet()
     
     default:
         shoot_cmd_send.friction_mode = FRICTION_ON;
+        shoot_cmd_send.bullet_speed = 30;
         break;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Ctrl] % 4) // C键设置底盘速度
-    {
-    case 0:
-        chassis_cmd_send.chassis_speed_buff = 40;
-        break;
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Ctrl] % 4) // C键设置底盘速度
+    // {
+    // case 0:
+    //     chassis_cmd_send.chassis_speed_buff = 40;
+    //     break;
     
-    case 1:
-        chassis_cmd_send.chassis_speed_buff = 60;
-        break;
+    // case 1:
+    //     chassis_cmd_send.chassis_speed_buff = 60;
+    //     break;
     
-    case 2:
-        chassis_cmd_send.chassis_speed_buff = 80;
-        break;
+    // case 2:
+    //     chassis_cmd_send.chassis_speed_buff = 80;
+    //     break;
     
-    default:
-        chassis_cmd_send.chassis_speed_buff = 100;
-        break;
-    }
-    switch (rc_data[TEMP].key[KEY_PRESS].shift) // 待添加 按shift允许超功率 消耗缓冲能量
+    // default:
+    //     chassis_cmd_send.chassis_speed_buff = 100;
+    //     break;
+    // }
+    switch (rc_data[TEMP].key[KEY_PRESS].shift) // 小陀螺
     {
     case 1:
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
@@ -324,7 +385,7 @@ static void MouseKeySet()
     }
     if (rc_data[TEMP].mouse.press_l == 1)
     {
-        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // E键设置发射模式
+        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // z键设置发射模式
         {
         case 0:
             shoot_cmd_send.load_mode = LOAD_1_BULLET;

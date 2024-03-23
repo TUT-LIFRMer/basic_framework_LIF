@@ -11,6 +11,7 @@
 
 #if defined(ONE_BOARD) || defined(CHASSIS_BOARD)
 #include "chassis.h"
+#include "dji_motor.h"
 #endif
 
 #if defined(ONE_BOARD) || defined(GIMBAL_BOARD)
@@ -37,6 +38,7 @@ void RobotInit()
 
 #if defined(ONE_BOARD) || defined(CHASSIS_BOARD)
     ChassisInit();
+    ChassisMotorFeedbackInit();
 #endif
 
     OSTaskInit(); // 创建基础任务

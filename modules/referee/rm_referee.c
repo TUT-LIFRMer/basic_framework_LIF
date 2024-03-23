@@ -42,7 +42,6 @@ static void JudgeReadData(uint8_t *buff)
 	// 判断帧头数据(0)是否为0xA5
 	if (buff[SOF] == REFEREE_SOF)
 	{
-		PrintLog("UIinit\n");
 		// 帧头CRC8校验
 		if (Verify_CRC8_Check_Sum(buff, LEN_HEADER) == TRUE)
 		{
@@ -59,55 +58,55 @@ static void JudgeReadData(uint8_t *buff)
 				{
 				case ID_game_state: // 0x0001
 					memcpy(&referee_info.GameState, (buff + DATA_Offset), LEN_game_state);
-					PrintLog("gamestate");
+
 					break;
 				case ID_game_result: // 0x0002
 					memcpy(&referee_info.GameResult, (buff + DATA_Offset), LEN_game_result);
-					PrintLog("game_result");
+	
 					break;
 				case ID_game_robot_survivors: // 0x0003
 					memcpy(&referee_info.GameRobotHP, (buff + DATA_Offset), LEN_game_robot_HP);
-					PrintLog("ID_game_robot_survivors");
+		
 					break;
 				case ID_event_data: // 0x0101
 					memcpy(&referee_info.EventData, (buff + DATA_Offset), LEN_event_data);
-					PrintLog("ID_event_data");
+	
 					break;
 				case ID_supply_projectile_action: // 0x0102
 					memcpy(&referee_info.SupplyProjectileAction, (buff + DATA_Offset), LEN_supply_projectile_action);
-					PrintLog("ID_supply_projectile_action");
+		
 					break;
 				case ID_game_robot_state: // 0x0201
 					memcpy(&referee_info.GameRobotState, (buff + DATA_Offset), LEN_game_robot_state);
-					PrintLog("ID_game_robot_state");
+			
 					break;
 				case ID_power_heat_data: // 0x0202
 					memcpy(&referee_info.PowerHeatData, (buff + DATA_Offset), LEN_power_heat_data);
-					PrintLog("ID_power_heat_data");
+			
 					break;
 				case ID_game_robot_pos: // 0x0203
 					memcpy(&referee_info.GameRobotPos, (buff + DATA_Offset), LEN_game_robot_pos);
-					PrintLog("ID_game_robot_pos");
+	
 					break;
 				case ID_buff_musk: // 0x0204
 					memcpy(&referee_info.BuffMusk, (buff + DATA_Offset), LEN_buff_musk);
-					PrintLog("ID_buff_musk");
+	
 					break;
 				case ID_aerial_robot_energy: // 0x0205
 					memcpy(&referee_info.AerialRobotEnergy, (buff + DATA_Offset), LEN_aerial_robot_energy);
-					PrintLog("ID_aerial_robot_energy");
+
 					break;
 				case ID_robot_hurt: // 0x0206
 					memcpy(&referee_info.RobotHurt, (buff + DATA_Offset), LEN_robot_hurt);
-					PrintLog("ID_robot_hurt");
+		
 					break;
 				case ID_shoot_data: // 0x0207
 					memcpy(&referee_info.ShootData, (buff + DATA_Offset), LEN_shoot_data);
-					PrintLog("ID_shoot_data");
+
 					break;
 				case ID_shoot_num: // 0x0208    射击次数
 					memcpy(&referee_info.ShootNumAndGoldCoin, (buff + DATA_Offset), LEN_shoot_num);
-					PrintLog("ID_shoot_num");
+	
 					break;
 				}
 				// case ID_student_interactive: // 0x0301   syhtodo接收代码未测试
@@ -120,7 +119,7 @@ static void JudgeReadData(uint8_t *buff)
 		if (*(buff + sizeof(xFrameHeader) + LEN_CMDID + referee_info.FrameHeader.DataLength + LEN_TAIL) == 0xA5)
 		{ // 如果一个数据包出现了多帧数据,则再次调用解析函数,直到所有数据包解析完毕
 			JudgeReadData(buff + sizeof(xFrameHeader) + LEN_CMDID + referee_info.FrameHeader.DataLength + LEN_TAIL);
-			PrintLog("next");
+
 		}
 	}
 }

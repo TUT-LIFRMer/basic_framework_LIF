@@ -74,7 +74,11 @@
         "usart.h": "c",
         "referee_ui.h": "c",
         "freertos.h": "c",
-        "referee_protocol.h": "c"
+        "referee_protocol.h": "c",
+        "complex_math_functions.h": "c",
+        "matrix_functions.h": "c",
+        "bayes_functions.h": "c",
+        "interpolation_functions.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",

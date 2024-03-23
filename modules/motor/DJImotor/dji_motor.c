@@ -2,11 +2,14 @@
 #include "general_def.h"
 #include "bsp_dwt.h"
 #include "bsp_log.h"
+#include "message_center.h"
+#include "robot_def.h"
 
 static uint8_t idx = 0; // register idx,是该文件的全局电机索引,在注册时使用
 /* DJI电机的实例,此处仅保存指针,内存的分配将通过电机实例初始化时通过malloc()进行 */
 static DJIMotorInstance *dji_motor_instance[DJI_MOTOR_CNT] = {NULL}; // 会在control任务中遍历该指针数组进行pid计算
-
+static Subscriber_t *motor_sub;//注册电机控制模块的订阅者
+static Chassis_Upload_Data_s chassis_motor_feedback;         // 底盘电机反馈数据用于功率限制
 /**
  * @brief 由于DJI电机发送以四个一组的形式进行,故对其进行特殊处理,用6个(2can*3group)can_instance专门负责发送
  *        该变量将在 DJIMotorControl() 中使用,分组在 MotorSenderGrouping()中进行
@@ -228,7 +231,10 @@ void DJIMotorSetRef(DJIMotorInstance *motor, float ref)
 {
     motor->motor_controller.pid_ref = ref;
 }
-
+//订阅者初始化
+void ChassisMotorFeedbackInit(){
+    motor_sub = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+};
 // 为所有电机实例计算三环PID,发送控制报文
 void DJIMotorControl()
 {
@@ -240,7 +246,7 @@ void DJIMotorControl()
     Motor_Controller_s *motor_controller;   // 电机控制器
     DJI_Motor_Measure_s *measure;           // 电机测量值
     float pid_measure, pid_ref;             // 电机PID测量值和设定值
-
+    SubGetMessage(motor_sub,&chassis_motor_feedback);
     // 遍历所有电机实例,进行串级PID的计算并设置发送报文的值
     for (size_t i = 0; i < idx; ++i)
     { // 减小访存开销,先保存指针引用
@@ -308,6 +314,48 @@ void DJIMotorControl()
     {
         if (sender_enable_flag[i])
         {
+            //对底盘的输出进行功率限制（如果底盘挂载的can变化需要及时更改这里的设置）
+            if (sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200)
+            {
+                int16_t motor1_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
+                int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
+                int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
+                int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
+                
+
+                if (chassis_motor_feedback.buffer_energy < 60)
+                {
+                    if (chassis_motor_feedback.buffer_energy < 30)
+                    {
+                        if (chassis_motor_feedback.buffer_energy < 10)
+                        {
+                            motor1_set = (int16_t)((float)motor1_set*0.2);
+                            motor2_set = (int16_t)((float)motor2_set*0.2);
+                            motor3_set = (int16_t)((float)motor3_set*0.2);
+                            motor4_set = (int16_t)((float)motor4_set*0.2);
+                        }else{
+                            motor1_set = (int16_t)((float)motor1_set*0.4);
+                            motor2_set = (int16_t)((float)motor2_set*0.4);
+                            motor3_set = (int16_t)((float)motor3_set*0.4);
+                            motor4_set = (int16_t)((float)motor4_set*0.4);
+                        }
+                        
+                    }else{
+                        motor1_set = (int16_t)((float)motor1_set*0.6);
+                        motor2_set = (int16_t)((float)motor2_set*0.6);
+                        motor3_set = (int16_t)((float)motor3_set*0.6);
+                        motor4_set = (int16_t)((float)motor4_set*0.6);
+                    }
+                }
+                sender_assignment[i].tx_buff[0] = (uint8_t)(motor1_set>>8);
+                sender_assignment[i].tx_buff[1] = (uint8_t)(motor1_set&0x00ff);
+                sender_assignment[i].tx_buff[2] = (uint8_t)(motor2_set>>8);
+                sender_assignment[i].tx_buff[3] = (uint8_t)(motor2_set&0x00ff);
+                sender_assignment[i].tx_buff[4] = (uint8_t)(motor3_set>>8);
+                sender_assignment[i].tx_buff[5] = (uint8_t)(motor3_set&0x00ff); 
+                sender_assignment[i].tx_buff[6] = (uint8_t)(motor4_set>>8);
+                sender_assignment[i].tx_buff[7] = (uint8_t)(motor4_set&0x00ff);
+            }
             CANTransmit(&sender_assignment[i], 1);
         }
     }

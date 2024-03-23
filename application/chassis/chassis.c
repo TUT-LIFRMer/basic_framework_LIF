@@ -158,10 +158,6 @@ static void MecanumCalculate()
  */
 static void LimitChassisOutput()
 {
-    // 功率限制待添加
-    // referee_data->PowerHeatData.chassis_power;
-    // referee_data->PowerHeatData.chassis_power_buffer;
-
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(motor_lf, vt_lf);
     DJIMotorSetRef(motor_rf, vt_rf);
@@ -218,7 +214,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = 1.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = 4000;
+        chassis_cmd_recv.wz = 5000;
         break;
     default:
         break;
@@ -235,9 +231,6 @@ void ChassisTask()
     // 根据控制模式进行正运动学解算,计算底盘输出
     MecanumCalculate();
 
-    // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
-    LimitChassisOutput();
-
     // 根据电机的反馈速度和IMU(如果有)计算真实速度
     EstimateSpeed();
 
@@ -250,7 +243,16 @@ void ChassisTask()
 
     // 推送反馈消息
 #ifdef ONE_BOARD
+    chassis_feedback_data.chassis_power = referee_data->PowerHeatData.chassis_power;
+    chassis_feedback_data.chassis_power_limit = (float)referee_data->GameRobotState.chassis_power_limit;
+    chassis_feedback_data.buffer_energy = (float)referee_data->PowerHeatData.buffer_energy;
+
+    chassis_feedback_data.shoot_heat = (float)referee_data->PowerHeatData.shooter_17mm_1_barrel_heat;
+    chassis_feedback_data.shoot_heat_limit = (float)referee_data->GameRobotState.shooter_barrel_heat_limit;
+
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
+    // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
+    LimitChassisOutput();
 #endif
 #ifdef CHASSIS_BOARD
     CANCommSend(chasiss_can_comm, (void *)&chassis_feedback_data);

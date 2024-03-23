@@ -126,5 +126,8 @@ void DJIMotorEnable(DJIMotorInstance *motor);
  * @param outer_loop 外层闭环类型
  */
 void DJIMotorOuterLoop(DJIMotorInstance *motor, Closeloop_Type_e outer_loop);
-
+/**
+ * @brief 注册订阅读者取底盘功率信息
+ */
+void ChassisMotorFeedbackInit();
 #endif // !DJI_MOTOR_H
