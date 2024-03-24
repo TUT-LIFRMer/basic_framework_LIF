@@ -30,7 +30,7 @@ void ShootInit()
         .controller_param_init_config = {
             .speed_PID = {
                 .Kp = 20, // 20
-                .Ki = 10, // 1
+                .Ki = 1, // 1
                 .Kd = 5,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
@@ -99,7 +99,7 @@ void ShootInit()
             .close_loop_type = CURRENT_LOOP | SPEED_LOOP | ANGLE_LOOP,
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL, // 注意方向设置为拨盘的拨出的击发方向
         },
-        .motor_type = M2006 // 英雄使用m3508
+        .motor_type = M3508 // 英雄使用m3508
     };
     loader = DJIMotorInit(&loader_config);
     Servo_Init_Config_s lid_config = {
@@ -136,8 +136,8 @@ void ShootTask()
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
     if (shoot_cmd_recv.friction_mode == FRICTION_ON)
     {
-        if (chassis_data.shoot_heat < chassis_data.shoot_heat_limit-10)
-        {
+        //if (chassis_data.shoot_heat < chassis_data.shoot_heat_limit-10)
+        //{
             // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
             switch (shoot_cmd_recv.bullet_speed)
             {
@@ -173,7 +173,7 @@ void ShootTask()
                 if (shoot_cmd_recv.shoot_num >= 1)
                 {
                     DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
-                    DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45)); // 控制量增加一发弹丸的角度
+                    DJIMotorSetRef(loader, loader->measure.total_angle - (ONE_BULLET_DELTA_ANGLE *60)); // 控制量增加一发弹丸的角度
                     shoot_feedback_data.shoot_num = shoot_cmd_recv.shoot_num - 1; // 反馈发射数量;
                     if (shoot_feedback_data.shoot_num == 0)
                     {
@@ -184,12 +184,12 @@ void ShootTask()
             // 三连发,如果不需要后续可能删除
             case LOAD_3_BULLET:
                 DJIMotorOuterLoop(loader, ANGLE_LOOP);                                                  // 切换到速度环
-                DJIMotorSetRef(loader, loader->measure.total_angle + 45 *3 * ONE_BULLET_DELTA_ANGLE); // 增加3发                                                                // 完成3发弹丸发射的时间
+                DJIMotorSetRef(loader, loader->measure.total_angle + 60 *3 * ONE_BULLET_DELTA_ANGLE); // 增加3发                                                                // 完成3发弹丸发射的时间
                 break;
             // 连发模式,对速度闭环,射频后续修改为可变,目前固定为1Hz
             case LOAD_BURSTFIRE:
                 DJIMotorOuterLoop(loader, SPEED_LOOP);
-                DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
+                DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
                 shoot_feedback_data.shoot_finish_flag = 0;
                 // x颗/秒换算成速度: 已知一圈的载弹量,由此计算出1s需要转的角度,注意换算角速度(DJIMotor的速度单位是angle per second)
                 break;
@@ -216,10 +216,10 @@ void ShootTask()
                 while (1)
                     ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
             }
-        }else{
-            DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
-            DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
-        }
+        //}else{
+        //    DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
+        //    DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
+        //}
         
         
     }
