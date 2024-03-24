@@ -71,7 +71,7 @@ void ChassisInit()
                 .MaxOut = 12000,
             },
             .current_PID = {
-                .Kp = 0.5, // 0.4
+                .Kp = 0.9, // 0.4
                 .Ki = 0,   // 0
                 .Kd = 0,
                 .IntegralLimit = 3000,
