@@ -490,12 +490,5 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
-    // vision_send_data.sof = 'P';
-    // int send_pitch =  (int)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
-    // int send_yaw =  (int)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
-    // vision_send_data.present_pitch = (int16_t)(send_pitch>>16);
-    // vision_send_data.present_yaw = (int16_t)(send_yaw>>16);
-    // vision_send_data.present_debug_value = 0;
-    // vision_send_data.null_byte = 0;
-    // VisionSend(&vision_send_data);
+
 }

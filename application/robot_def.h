@@ -34,10 +34,10 @@
 // 发射参数
 #define ONE_BULLET_DELTA_ANGLE 19    // 发射一发弹丸拨盘转动的距离,由机械设计图纸给出m2006为36
 #define REDUCTION_RATIO_LOADER 19.0f // 拨盘电机的减速比,英雄需要修改为3508的19.0f,m2006为49.0f
-#define NUM_PER_CIRCLE 8            // 拨盘一圈的装载量
+#define NUM_PER_CIRCLE 6            // 拨盘一圈的装载量
 // 机器人底盘修改的参数,单位为mm(毫米)
-#define WHEEL_BASE 324              // 纵向轴距(前进后退方向)
-#define TRACK_WIDTH 311             // 横向轮距(左右平移方向)
+#define WHEEL_BASE 438              // 纵向轴距(前进后退方向)
+#define TRACK_WIDTH 401             // 横向轮距(左右平移方向)
 #define CENTER_GIMBAL_OFFSET_X 0    // 云台旋转中心距底盘几何中心的距离,前后方向,云台位于正中心时默认设为0
 #define CENTER_GIMBAL_OFFSET_Y 0    // 云台旋转中心距底盘几何中心的距离,左右方向,云台位于正中心时默认设为0
 #define RADIUS_WHEEL 74             // 轮子半径
