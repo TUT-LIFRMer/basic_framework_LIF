@@ -64,15 +64,15 @@ void ChassisInit()
         .controller_param_init_config = {
             .speed_PID = {
                 .Kp = 10, // 4.5
-                .Ki = 0,  // 0
+                .Ki = 1,  // 0
                 .Kd = 0,  // 0
                 .IntegralLimit = 3000,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 12000,
             },
             .current_PID = {
-                .Kp = 0.9, // 0.4
-                .Ki = 0,   // 0
+                .Kp = 0.8, // 0.4
+                .Ki = 0.1,   // 0
                 .Kd = 0,
                 .IntegralLimit = 3000,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
