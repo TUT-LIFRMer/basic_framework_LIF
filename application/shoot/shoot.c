@@ -201,16 +201,9 @@ void ShootTask()
                 shoot_feedback_data.shoot_finish_flag = 0;
                 break;
             case LOAD_VISION:
-                if (shoot_cmd_recv.shoot_num >= 1)
-                {
-                    DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
-                    DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
-                    shoot_feedback_data.shoot_num = 0; // 反馈发射数量; 
-                    if (shoot_feedback_data.shoot_num == 0)
-                    {
-                        shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
-                    }
-                }
+                DJIMotorOuterLoop(loader, SPEED_LOOP);
+                DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
+                shoot_feedback_data.shoot_finish_flag = 0;
                 break;
             default:
                 while (1)
