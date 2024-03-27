@@ -172,16 +172,8 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-        gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ */ ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
-        gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 */((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
-        shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
-        if (shoot_cmd_send.shoot_num == 1)
-        {
-            shoot_cmd_send.load_mode = LOAD_VISION;
-        }else if (shoot_cmd_send.shoot_num == 0)
-        {
-            shoot_cmd_send.load_mode = LOAD_STOP;
-        }
+        gimbal_cmd_send.yaw = gimbal_cmd_send.yaw - ((0.005f * (float)rc_data[TEMP].rc.rocker_l_) + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f));
+        gimbal_cmd_send.pitch =gimbal_cmd_send.pitch + ((0.001f * (float)rc_data[TEMP].rc.rocker_l1) + ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f));
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
         gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
