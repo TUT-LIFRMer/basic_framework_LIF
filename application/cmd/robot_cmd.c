@@ -152,7 +152,7 @@ static void CalcOffsetAngle()
  */
 static void RemoteControlSet()
 {
-    
+
     // 控制底盘和云台运行模式,云台待添加,云台是否始终使用IMU数据?
     if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中]或[上],底盘跟随云台
     {
@@ -176,8 +176,8 @@ static void RemoteControlSet()
         gimbal_cmd_send.pitch =/* (0.001f * (float)rc_data[TEMP].rc.rocker_l1 */((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_pitch)/0.0174533f /*- gimbal_cmd_send.pitch*/);
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
         shoot_cmd_send.load_mode = LOAD_VISION;
-      
-      
+
+
         if (shoot_fetch_data.shoot_finish_flag == 1)
         {
             vision_recv_data->ACTION_DATA.fire_times = 0;
@@ -214,8 +214,8 @@ static void RemoteControlSet()
             {
                 shoot_cmd_send.shoot_num = 0;
             }
-            
-        } 
+
+        }
         if (rc_data[TEMP].rc.dial < -100)
         {
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
@@ -225,7 +225,7 @@ static void RemoteControlSet()
         if ((rc_data[TEMP].rc.dial == 0) && (shoot_cmd_send.load_mode != LOAD_VISION)){
             shoot_cmd_send.load_mode = LOAD_STOP;
         }
-    } 
+    }
 }
 
 /**
@@ -289,7 +289,7 @@ static void MouseKeySet()
     else{
         chassis_cmd_send.chassis_speed_buff = 15000;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) 
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4)
     {
     case 0:
         break;
@@ -307,7 +307,7 @@ static void MouseKeySet()
     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
 
     gimbal_cmd_send.yaw -= (float)rc_data[TEMP].mouse.x / 660*5; // 系数待测
-    gimbal_cmd_send.pitch -= (float)rc_data[TEMP].mouse.y / 660*5;
+    gimbal_cmd_send.pitch += (float)rc_data[TEMP].mouse.y / 660*5;
 
     if (gimbal_cmd_send.pitch > 50)
     {
@@ -324,7 +324,7 @@ static void MouseKeySet()
     case 0:
         shoot_cmd_send.lid_mode = LID_CLOSE;
         break;
-    
+
     default:
         shoot_cmd_send.lid_mode = LID_OPEN;
         break;
@@ -334,7 +334,7 @@ static void MouseKeySet()
     case 0:
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         break;
-    
+
     default:
         shoot_cmd_send.friction_mode = FRICTION_ON;
         shoot_cmd_send.bullet_speed = 30;
@@ -356,7 +356,7 @@ static void MouseKeySet()
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
         break;
-    
+
     default:
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
         break;
@@ -386,7 +386,7 @@ static void MouseKeySet()
             shoot_cmd_send.shoot_rate = 8;
             shoot_cmd_send.shoot_num = 0;
             break;
-        
+
         case 1:
             shoot_cmd_send.load_mode = LOAD_1_BULLET;
             shoot_cmd_send.shoot_num = 1;
@@ -397,7 +397,7 @@ static void MouseKeySet()
             break;
         }
     }
-    
+
 }
 
 /**
@@ -446,7 +446,7 @@ void RobotCMDTask()
     CalcOffsetAngle();
     // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
     if (switch_is_mid(rc_data[TEMP].rc.switch_left)||switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[中]或[下],遥控器控制
-    {    
+    {
         RemoteControlSet();
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制和相关模式选择
@@ -469,7 +469,7 @@ void RobotCMDTask()
         if (switch_is_mid(rc_data[TEMP].rc.switch_right) && rc_data[TEMP].rc.dial < -200)
         {
             shoot_cmd_send.lid_mode = LID_OPEN;
-        } 
+        }
         if (switch_is_mid(rc_data[TEMP].rc.switch_right) && rc_data[TEMP].rc.dial > 200)
         {
             shoot_cmd_send.lid_mode = LID_CLOSE;

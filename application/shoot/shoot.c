@@ -29,16 +29,16 @@ void ShootInit()
         },
         .controller_param_init_config = {
             .speed_PID = {
-                .Kp = 20, // 20
-                .Ki = 1, // 1
-                .Kd = 5,
+                .Kp = 15, // 20
+                .Ki = 5, // 1
+                .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
                 .MaxOut = 15000,
             },
             .current_PID = {
-                .Kp = 0.7, // 0.7
-                .Ki = 0.1, // 0.1
+                .Kp = 0.5, // 0.7
+                .Ki = 0, // 0.1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
@@ -205,7 +205,7 @@ void ShootTask()
                 {
                     DJIMotorOuterLoop(loader, ANGLE_LOOP); // 切换到角度环
                     DJIMotorSetRef(loader, loader->measure.total_angle + (ONE_BULLET_DELTA_ANGLE *45*shoot_cmd_recv.shoot_num)); // 控制量增加一发弹丸的角度
-                    shoot_feedback_data.shoot_num = 0; // 反馈发射数量; 
+                    shoot_feedback_data.shoot_num = 0; // 反馈发射数量;
                     if (shoot_feedback_data.shoot_num == 0)
                     {
                         shoot_feedback_data.shoot_finish_flag = 1; // 完成发射
@@ -220,8 +220,8 @@ void ShootTask()
         //    DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
         //    DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
         //}
-        
-        
+
+
     }
     else // 关闭摩擦轮
     {
@@ -232,7 +232,7 @@ void ShootTask()
     }
 
 
-    
+
 
 
 
