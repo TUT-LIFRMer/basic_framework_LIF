@@ -315,7 +315,7 @@ void DJIMotorControl()
         if (sender_enable_flag[i])
         {
             //对底盘的输出进行功率限制（如果底盘挂载的can变化需要及时更改这里的设置）
-            if (sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200)
+            if ((sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200) && (chassis_motor_feedback.chassis_power_limit != 0))
             {
                 int16_t motor1_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
                 int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
