@@ -200,10 +200,10 @@ void ShootTask()
                 DJIMotorOuterLoop(loader, SPEED_LOOP);
                 DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
                 shoot_feedback_data.shoot_finish_flag = 0;
-                if (loader->measure.speed_aps != 0)
+                if (loader->measure.speed_aps > 0)
                 {
                     stop_flag = 0;
-                }else if (loader->measure.speed_aps == 0)
+                }else if (loader->measure.speed_aps <= 0)
                 {
                     stop_flag++;
                 }
@@ -212,6 +212,8 @@ void ShootTask()
                     DJIMotorOuterLoop(loader, SPEED_LOOP);
                     DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
                     shoot_feedback_data.shoot_finish_flag = 0;
+                }else if (stop_flag > 12)
+                {
                     stop_flag = 0;
                 }
                 break;
