@@ -64,32 +64,27 @@ void get_protocol_send_data(
                 
                             )    // 待发送的数据帧长度
 {
-    uint16_t *pu16;
+    float *pf;
+    int8_t *pi8;
     int16_t *pi16;
     uint32_t *p32;
-
-
+    
     tx_buf[0] = tx_data->sof;
-    tx_buf[1] = tx_data->time_minute;
-    tx_buf[2] = tx_data->time_second;
+    pi8 = (int8_t*)&tx_buf[1];
+    *pi8 = tx_data->fire_times;
 
+    pf = (float*)&tx_buf[2];
+    *pf = tx_data->abs_pitch;
 
-    pu16 = (uint16_t*)&tx_buf[3];
-    *pu16 = tx_data->time_second_frac;
+    pf = (float*)&tx_buf[6];
+    *pf = tx_data->abs_yaw;
 
-    pi16 = (int16_t*)&tx_buf[5];
-    *pi16 = tx_data->present_pitch;
-
-    pi16 = (int16_t*)&tx_buf[7];
-    *pi16 = tx_data->present_yaw;
-
-    pi16 = (int16_t*)&tx_buf[9];
-    *pi16 = tx_data->present_debug_value;
-
-    tx_buf[11] = tx_data->null_byte;
+    pi16 = (int16_t*)&tx_buf[10];
+    *pi16 = tx_data->reserved_slot;
 
     p32 = (uint32_t*)&tx_buf[0];
     tx_data->crc_value=HAL_CRC_Calculate(&hcrc,p32,3);
+
     p32 = (uint32_t*)&tx_buf[12];
     *p32 = tx_data->crc_value;
 }
@@ -99,9 +94,8 @@ void get_protocol_send_data(
 */
 uint16_t get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // 接收的float数据存储地址
 {
-    switch (rx_buf[0])
+    if (rx_buf[0] == 'A')
     {
-    case 'A':
         if(check_data4_crc32(rx_buf,ACTION_DATA_LENGTH) == CRC_WRONG)
         {
             return DATA_STATE_WRONG;
@@ -110,44 +104,17 @@ uint16_t get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // �
         {
             rx_data->ACTION_DATA.sof = rx_buf[0];
             rx_data->ACTION_DATA.fire_times = rx_buf[1];
-            rx_data->ACTION_DATA.relative_pitch = (int16_t)((rx_buf[2]>>8)|(rx_buf[3]<<8));
-            rx_data->ACTION_DATA.relative_yaw = (int16_t)((rx_buf[4]>>8)|(rx_buf[5]<<8));
-            rx_data->ACTION_DATA.reach_minute = (uint8_t)rx_buf[6];
-            rx_data->ACTION_DATA.reach_second = (uint8_t)rx_buf[7];
-            rx_data->ACTION_DATA.reach_second_frac = (uint16_t)((rx_buf[8]>>8)|(rx_buf[9]<<8));
-            rx_data->ACTION_DATA.setting_voltage_or_rpm = (uint16_t)((rx_buf[10]>>8)|(rx_buf[11]<<8));
-            rx_data->ACTION_DATA.crc_check = (uint32_t)((rx_buf[12]>>24)|(rx_buf[13]<<8)|(rx_buf[14]<<16)|(rx_buf[15]<<24));
+            rx_data->ACTION_DATA.abs_pitch = *((float*) &rx_buf[2]);
+            rx_data->ACTION_DATA.abs_yaw = *((float*) &rx_buf[6]);
+            rx_data->ACTION_DATA.reserved_slot = *((int16_t*) &rx_buf[10]);
+            rx_data->ACTION_DATA.crc_check = *((uint32_t*) &rx_buf[12]);
             return DATA_STATE_ACTION;
         }
-        break;
-    case 'S':
-        if (check_data4_crc32(rx_buf,SYN_DATA_LENGTH) == CRC_WRONG)
-        {
-            return DATA_STATE_WRONG;
-        }
-        else
-        {
-            rx_data->SYN_DATA.sof = rx_buf[0];
-            rx_data->SYN_DATA.time_minute = rx_buf[1];
-            rx_data->SYN_DATA.time_second = rx_buf[2];
-            rx_data->SYN_DATA.time_second_frac = (uint16_t)((rx_buf[3]>>8)|(rx_buf[4]<<8));
-            rx_data->SYN_DATA.null_7byte[0] = rx_buf[5];
-            rx_data->SYN_DATA.null_7byte[1] = rx_buf[6];
-            rx_data->SYN_DATA.null_7byte[2] = rx_buf[7];
-            rx_data->SYN_DATA.null_7byte[3] = rx_buf[8];
-            rx_data->SYN_DATA.null_7byte[4] = rx_buf[9];
-            rx_data->SYN_DATA.null_7byte[5] = rx_buf[10];
-            rx_data->SYN_DATA.null_7byte[6] = rx_buf[11];
-            rx_data->SYN_DATA.crc_check = (uint32_t)((rx_buf[12]>>24)|(rx_buf[13]<<8)|(rx_buf[14]<<16)|(rx_buf[15]<<24));
-            rx_data->SYN_DATA.dwttime = DWT_GetTimeline_ms();
-            return DATA_STATE_SYN;
-        }
-        break;
-    default:
-        return DATA_STATE_WRONG;
-        break;
     }
-    return 0;
+    else
+    {
+        return DATA_STATE_WRONG;
+    }
 }
 
 
