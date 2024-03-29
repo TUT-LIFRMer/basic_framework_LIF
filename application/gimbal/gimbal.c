@@ -149,11 +149,10 @@ void GimbalTask()
     // 设置反馈数据,主要是imu和yaw的ecd
     gimbal_feedback_data.gimbal_imu_data = *gimba_IMU_data;
     gimbal_feedback_data.yaw_motor_single_round_angle = yaw_motor->measure.angle_single_round;
-
     vision_send_data.sof = 'P';
     vision_send_data.fire_times = 0;
     vision_send_data.present_pitch = gimbal_feedback_data.gimbal_imu_data.Pitch;
-    vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.YawTotalAngle;   // if gimbal controlled by YAW not by YAW_TOTAL, then it should be YAW ; otherwise, it should be YAW_TOTAL
+    vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.Yaw;   
     vision_send_data.reserved_slot = 0;
     VisionSend(&vision_send_data);
     // 推送消息
