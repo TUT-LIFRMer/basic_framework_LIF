@@ -68,25 +68,25 @@ void get_protocol_send_data(
     int8_t *pi8;
     int16_t *pi16;
     uint32_t *p32;
-    
+    uint32_t crc_val;
     tx_buf[0] = tx_data->sof;
     pi8 = (int8_t*)&tx_buf[1];
     *pi8 = tx_data->fire_times;
 
     pf = (float*)&tx_buf[2];
-    *pf = tx_data->abs_pitch;
+    *pf = tx_data->present_pitch;
 
     pf = (float*)&tx_buf[6];
-    *pf = tx_data->abs_yaw;
+    *pf = tx_data->present_yaw;
 
     pi16 = (int16_t*)&tx_buf[10];
     *pi16 = tx_data->reserved_slot;
 
     p32 = (uint32_t*)&tx_buf[0];
-    tx_data->crc_value=HAL_CRC_Calculate(&hcrc,p32,3);
+    crc_val=HAL_CRC_Calculate(&hcrc,p32,3);
 
     p32 = (uint32_t*)&tx_buf[12];
-    *p32 = tx_data->crc_value;
+    *p32 = crc_val;
 }
 /*
     此函数用于处理接收数据，
