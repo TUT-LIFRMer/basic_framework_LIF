@@ -172,7 +172,7 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-          gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+        gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
         gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
         if (shoot_cmd_send.shoot_num == 1)
