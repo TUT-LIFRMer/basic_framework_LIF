@@ -206,28 +206,13 @@ void ShootTask()
                 DJIMotorOuterLoop(loader, SPEED_LOOP);
                 DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
                 shoot_feedback_data.shoot_finish_flag = 0;
-                if (loader->measure.speed_aps > 0)
-                {
-                    stop_flag = 0;
-                }else if (loader->measure.speed_aps <= 0)
-                {
-                    stop_flag++;
-                }
-                if (stop_flag > 2)
-                {
-                    DJIMotorOuterLoop(loader, SPEED_LOOP);
-                    DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
-                    shoot_feedback_data.shoot_finish_flag = 0;
-                }else if (stop_flag > 200)
-                {
-                    stop_flag = 0;
-                }
                 
                 break;
             default:
                 while (1)
                     ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
             }
+            
         }else{
             DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
             DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
