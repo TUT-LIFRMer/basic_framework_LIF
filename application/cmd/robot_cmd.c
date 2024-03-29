@@ -178,10 +178,7 @@ static void RemoteControlSet()
         if ((vision_recv_data->ACTION_DATA.reserved_slot/10) == 2)
         {
             shoot_cmd_send.load_mode == LOAD_REVERSE;
-        }else{
-            shoot_cmd_send.load_mode == LOAD_STOP;
-        }
-        if (shoot_cmd_send.shoot_num == 1)
+        }else if (shoot_cmd_send.shoot_num == 1)
         {
             shoot_cmd_send.load_mode = LOAD_VISION;
         }else if (shoot_cmd_send.shoot_num == 0)
