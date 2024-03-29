@@ -20,6 +20,7 @@ static Chassis_Upload_Data_s chassis_data; // 来自底盘的底盘信息
 
 // dwt定时,计算冷却用
 static float hibernate_time = 0, dead_time = 0;
+int8_t stop_flag = 0;
 void ShootInit()
 {
     // 摩擦轮
@@ -81,8 +82,8 @@ void ShootInit()
                 .Ki = 1, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
-                .IntegralLimit = 10000,
-                .MaxOut = 10000,
+                .IntegralLimit = 5000,
+                .MaxOut = 5000,
             },
             .current_PID = {
                 .Kp = 0.7, // 0.7
@@ -199,11 +200,29 @@ void ShootTask()
                 DJIMotorOuterLoop(loader, SPEED_LOOP);
                 DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
                 shoot_feedback_data.shoot_finish_flag = 0;
+
                 break;
             case LOAD_VISION:
                 DJIMotorOuterLoop(loader, SPEED_LOOP);
                 DJIMotorSetRef(loader, shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8);
                 shoot_feedback_data.shoot_finish_flag = 0;
+                if (loader->measure.speed_aps > 0)
+                {
+                    stop_flag = 0;
+                }else if (loader->measure.speed_aps <= 0)
+                {
+                    stop_flag++;
+                }
+                if (stop_flag > 2)
+                {
+                    DJIMotorOuterLoop(loader, SPEED_LOOP);
+                    DJIMotorSetRef(loader, -(shoot_cmd_recv.shoot_rate * 360 * REDUCTION_RATIO_LOADER / 8));
+                    shoot_feedback_data.shoot_finish_flag = 0;
+                }else if (stop_flag > 200)
+                {
+                    stop_flag = 0;
+                }
+                
                 break;
             default:
                 while (1)
