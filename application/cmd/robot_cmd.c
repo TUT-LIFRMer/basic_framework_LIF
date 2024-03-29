@@ -172,7 +172,7 @@ static void RemoteControlSet()
     // 左侧开关状态为[下],遥控器控制下启动视觉调试
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
-        gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+          gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
         gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
         if (shoot_cmd_send.shoot_num == 1)
@@ -181,6 +181,22 @@ static void RemoteControlSet()
         }else if (shoot_cmd_send.shoot_num == 0)
         {
             shoot_cmd_send.load_mode = LOAD_STOP;
+        }
+        if ((vision_recv_data->ACTION_DATA.reserved_slot/10) == 2)
+        {
+            shoot_cmd_send.load_mode == LOAD_REVERSE;
+        }
+        if (vision_recv_data->ACTION_DATA.reserved_slot%10 == 2)
+        {
+            chassis_cmd_send.vy = 10000;
+        }
+        if (vision_recv_data->ACTION_DATA.reserved_slot%10 == 1)
+        {
+            chassis_cmd_send.vy = 0;
+        }
+        if (vision_recv_data->ACTION_DATA.reserved_slot%10 == 0)
+        {
+            chassis_cmd_send.vy = -10000;
         }
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
