@@ -38,13 +38,6 @@ typedef enum
 	BASE = 8
 } Target_Type_e;
 
-typedef enum
-{
-    DATA_STATE_ACTION,
-    DATA_STATE_POS,
-    DATA_STATE_SYN,
-    DATA_STATE_WRONG
-}DATA_STATE;
 
 typedef enum
 {
@@ -56,26 +49,13 @@ typedef struct
 {
 	struct 
 	{
-    	char   sof                ;
-    	int8_t fire_times         ;
-    	int16_t relative_pitch    ;
-    	int16_t relative_yaw      ;
-    	uint8_t reach_minute      ;
-    	uint8_t reach_second      ;
-    	uint16_t reach_second_frac;
-    	int16_t setting_voltage_or_rpm;
-    	uint32_t crc_check        ;
+    	char   sof             ;
+    	int8_t fire_times      ;
+    	float abs_pitch    ;
+    	float abs_yaw      ;
+    	int16_t reserved_slot  ;
+    	uint32_t crc_check     ;
 	}ACTION_DATA;
-	struct
-	{
-    	char   sof                  ;
-    	uint8_t time_minute         ;
-    	uint8_t time_second         ;
-    	uint16_t time_second_frac   ;
-    	char null_7byte[7]          ;
-    	uint32_t crc_check          ;
-		float dwttime;
-	}SYN_DATA;
 } Vision_Recv_s;
 
 typedef enum
@@ -105,13 +85,10 @@ typedef enum
 typedef struct
 {
     char sof;
-    uint8_t time_minute;
-    uint8_t time_second;
-    uint16_t time_second_frac;
-    int16_t present_pitch;
-    int16_t present_yaw;
-    int16_t present_debug_value;
-    char null_byte;
+	int8_t fire_times;
+    float present_pitch;
+    float present_yaw;
+    int16_t reserved_slot;
     uint32_t crc_value;
 } 
 Vision_Send_s;
@@ -153,6 +130,6 @@ extern void get_protocol_send_data(
 							);	 // 待发送的数据帧长度
 
 /*接收数据处理*/
-uint16_t get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
+void get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
 						   Vision_Recv_s *rx_data);			 // 接收的float数据存储地址
 #endif // !MASTER_PROCESS_H

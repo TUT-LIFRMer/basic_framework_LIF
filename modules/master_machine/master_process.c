@@ -64,32 +64,27 @@ void get_protocol_send_data(
                 
                             )    // 待发送的数据帧长度
 {
-    uint16_t *pu16;
+    float *pf;
+    int8_t *pi8;
     int16_t *pi16;
     uint32_t *p32;
-
-
+    
     tx_buf[0] = tx_data->sof;
-    tx_buf[1] = tx_data->time_minute;
-    tx_buf[2] = tx_data->time_second;
+    pi8 = (int8_t*)&tx_buf[1];
+    *pi8 = tx_data->fire_times;
 
+    pf = (float*)&tx_buf[2];
+    *pf = tx_data->abs_pitch;
 
-    pu16 = (uint16_t*)&tx_buf[3];
-    *pu16 = tx_data->time_second_frac;
+    pf = (float*)&tx_buf[6];
+    *pf = tx_data->abs_yaw;
 
-    pi16 = (int16_t*)&tx_buf[5];
-    *pi16 = tx_data->present_pitch;
-
-    pi16 = (int16_t*)&tx_buf[7];
-    *pi16 = tx_data->present_yaw;
-
-    pi16 = (int16_t*)&tx_buf[9];
-    *pi16 = tx_data->present_debug_value;
-
-    tx_buf[11] = tx_data->null_byte;
+    pi16 = (int16_t*)&tx_buf[10];
+    *pi16 = tx_data->reserved_slot;
 
     p32 = (uint32_t*)&tx_buf[0];
     tx_data->crc_value=HAL_CRC_Calculate(&hcrc,p32,3);
+
     p32 = (uint32_t*)&tx_buf[12];
     *p32 = tx_data->crc_value;
 }
@@ -97,57 +92,24 @@ void get_protocol_send_data(
     此函数用于处理接收数据，
     返回数据内容的id
 */
-uint16_t get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // 接收的float数据存储地址
+void get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // 接收的float数据存储地址
 {
-    switch (rx_buf[0])
+    if (rx_buf[0] == 'A')
     {
-    case 'A':
         if(check_data4_crc32(rx_buf,ACTION_DATA_LENGTH) == CRC_WRONG)
         {
-            return DATA_STATE_WRONG;
+            return;
         }
         else
         {
             rx_data->ACTION_DATA.sof = rx_buf[0];
             rx_data->ACTION_DATA.fire_times = rx_buf[1];
-            rx_data->ACTION_DATA.relative_pitch = (int16_t)((rx_buf[2]>>8)|(rx_buf[3]<<8));
-            rx_data->ACTION_DATA.relative_yaw = (int16_t)((rx_buf[4]>>8)|(rx_buf[5]<<8));
-            rx_data->ACTION_DATA.reach_minute = (uint8_t)rx_buf[6];
-            rx_data->ACTION_DATA.reach_second = (uint8_t)rx_buf[7];
-            rx_data->ACTION_DATA.reach_second_frac = (uint16_t)((rx_buf[8]>>8)|(rx_buf[9]<<8));
-            rx_data->ACTION_DATA.setting_voltage_or_rpm = (uint16_t)((rx_buf[10]>>8)|(rx_buf[11]<<8));
-            rx_data->ACTION_DATA.crc_check = (uint32_t)((rx_buf[12]>>24)|(rx_buf[13]<<8)|(rx_buf[14]<<16)|(rx_buf[15]<<24));
-            return DATA_STATE_ACTION;
+            rx_data->ACTION_DATA.abs_pitch = *((float*) &rx_buf[2]);
+            rx_data->ACTION_DATA.abs_yaw = *((float*) &rx_buf[6]);
+            rx_data->ACTION_DATA.reserved_slot = *((int16_t*) &rx_buf[10]);
+            rx_data->ACTION_DATA.crc_check = *((uint32_t*) &rx_buf[12]);
         }
-        break;
-    case 'S':
-        if (check_data4_crc32(rx_buf,SYN_DATA_LENGTH) == CRC_WRONG)
-        {
-            return DATA_STATE_WRONG;
-        }
-        else
-        {
-            rx_data->SYN_DATA.sof = rx_buf[0];
-            rx_data->SYN_DATA.time_minute = rx_buf[1];
-            rx_data->SYN_DATA.time_second = rx_buf[2];
-            rx_data->SYN_DATA.time_second_frac = (uint16_t)((rx_buf[3]>>8)|(rx_buf[4]<<8));
-            rx_data->SYN_DATA.null_7byte[0] = rx_buf[5];
-            rx_data->SYN_DATA.null_7byte[1] = rx_buf[6];
-            rx_data->SYN_DATA.null_7byte[2] = rx_buf[7];
-            rx_data->SYN_DATA.null_7byte[3] = rx_buf[8];
-            rx_data->SYN_DATA.null_7byte[4] = rx_buf[9];
-            rx_data->SYN_DATA.null_7byte[5] = rx_buf[10];
-            rx_data->SYN_DATA.null_7byte[6] = rx_buf[11];
-            rx_data->SYN_DATA.crc_check = (uint32_t)((rx_buf[12]>>24)|(rx_buf[13]<<8)|(rx_buf[14]<<16)|(rx_buf[15]<<24));
-            rx_data->SYN_DATA.dwttime = DWT_GetTimeline_ms();
-            return DATA_STATE_SYN;
-        }
-        break;
-    default:
-        return DATA_STATE_WRONG;
-        break;
     }
-    return 0;
 }
 
 
@@ -221,29 +183,6 @@ void VisionSend(Vision_Send_s *tx_data)
     // TODO: code to set flag_register
     // flag_register = 30 << 8 | 0b00000001;
     // 将数据转化为seasky协议的数据包
-    
-    float dt = DWT_GetTimeline_ms() - recv_data.SYN_DATA.dwttime;
-    recv_data.SYN_DATA.dwttime = DWT_GetTimeline_ms();
-    if (recv_data.SYN_DATA.time_second_frac + dt >= 1000)
-    {
-        recv_data.SYN_DATA.time_second_frac = (recv_data.SYN_DATA.time_second_frac + (uint16_t)dt)%1000;
-        recv_data.SYN_DATA.time_second = (recv_data.SYN_DATA.time_second + (recv_data.SYN_DATA.time_second_frac+(uint16_t)dt)/1000);
-    } else {
-        recv_data.SYN_DATA.time_second_frac = recv_data.SYN_DATA.time_second_frac + (uint16_t)dt;
-    }
-    if (recv_data.SYN_DATA.time_second >= 60)
-    {
-        recv_data.SYN_DATA.time_second = recv_data.SYN_DATA.time_second % 60;
-        recv_data.SYN_DATA.time_minute = recv_data.SYN_DATA.time_minute + recv_data.SYN_DATA.time_second/60;
-    }
-    if (recv_data.SYN_DATA.time_minute >= 60)
-    {
-        recv_data.SYN_DATA.time_minute = recv_data.SYN_DATA.time_minute % 60;
-    }
-    tx_data->time_minute = recv_data.SYN_DATA.time_minute;
-    tx_data->time_second = recv_data.SYN_DATA.time_second;
-    tx_data->time_second_frac = recv_data.SYN_DATA.time_second_frac;
-    
     get_protocol_send_data(send_buff, tx_data);
     USARTSend(vision_usart_instance, send_buff, sizeof(Vision_Send_s), USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
     // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.
