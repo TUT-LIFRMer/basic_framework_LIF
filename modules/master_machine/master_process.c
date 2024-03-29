@@ -92,13 +92,13 @@ void get_protocol_send_data(
     此函数用于处理接收数据，
     返回数据内容的id
 */
-uint16_t get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // 接收的float数据存储地址
+void get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // 接收的float数据存储地址
 {
     if (rx_buf[0] == 'A')
     {
         if(check_data4_crc32(rx_buf,ACTION_DATA_LENGTH) == CRC_WRONG)
         {
-            return DATA_STATE_WRONG;
+            return;
         }
         else
         {
@@ -108,12 +108,7 @@ uint16_t get_protocol_info(uint8_t *rx_buf, Vision_Recv_s *rx_data)         // �
             rx_data->ACTION_DATA.abs_yaw = *((float*) &rx_buf[6]);
             rx_data->ACTION_DATA.reserved_slot = *((int16_t*) &rx_buf[10]);
             rx_data->ACTION_DATA.crc_check = *((uint32_t*) &rx_buf[12]);
-            return DATA_STATE_ACTION;
         }
-    }
-    else
-    {
-        return DATA_STATE_WRONG;
     }
 }
 
@@ -188,29 +183,6 @@ void VisionSend(Vision_Send_s *tx_data)
     // TODO: code to set flag_register
     // flag_register = 30 << 8 | 0b00000001;
     // 将数据转化为seasky协议的数据包
-    
-    float dt = DWT_GetTimeline_ms() - recv_data.SYN_DATA.dwttime;
-    recv_data.SYN_DATA.dwttime = DWT_GetTimeline_ms();
-    if (recv_data.SYN_DATA.time_second_frac + dt >= 1000)
-    {
-        recv_data.SYN_DATA.time_second_frac = (recv_data.SYN_DATA.time_second_frac + (uint16_t)dt)%1000;
-        recv_data.SYN_DATA.time_second = (recv_data.SYN_DATA.time_second + (recv_data.SYN_DATA.time_second_frac+(uint16_t)dt)/1000);
-    } else {
-        recv_data.SYN_DATA.time_second_frac = recv_data.SYN_DATA.time_second_frac + (uint16_t)dt;
-    }
-    if (recv_data.SYN_DATA.time_second >= 60)
-    {
-        recv_data.SYN_DATA.time_second = recv_data.SYN_DATA.time_second % 60;
-        recv_data.SYN_DATA.time_minute = recv_data.SYN_DATA.time_minute + recv_data.SYN_DATA.time_second/60;
-    }
-    if (recv_data.SYN_DATA.time_minute >= 60)
-    {
-        recv_data.SYN_DATA.time_minute = recv_data.SYN_DATA.time_minute % 60;
-    }
-    tx_data->time_minute = recv_data.SYN_DATA.time_minute;
-    tx_data->time_second = recv_data.SYN_DATA.time_second;
-    tx_data->time_second_frac = recv_data.SYN_DATA.time_second_frac;
-    
     get_protocol_send_data(send_buff, tx_data);
     USARTSend(vision_usart_instance, send_buff, sizeof(Vision_Send_s), USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
     // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.

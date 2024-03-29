@@ -38,13 +38,6 @@ typedef enum
 	BASE = 8
 } Target_Type_e;
 
-typedef enum
-{
-    DATA_STATE_ACTION,
-    DATA_STATE_POS,
-    DATA_STATE_SYN,
-    DATA_STATE_WRONG
-}DATA_STATE;
 
 typedef enum
 {
@@ -137,6 +130,6 @@ extern void get_protocol_send_data(
 							);	 // 待发送的数据帧长度
 
 /*接收数据处理*/
-uint16_t get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
+void get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
 						   Vision_Recv_s *rx_data);			 // 接收的float数据存储地址
 #endif // !MASTER_PROCESS_H
