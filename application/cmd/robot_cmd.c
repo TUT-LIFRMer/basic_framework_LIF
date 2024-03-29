@@ -175,10 +175,8 @@ static void RemoteControlSet()
         gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
         gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
         shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
-        if ((vision_recv_data->ACTION_DATA.reserved_slot/10) == 2)
-        {
-            shoot_cmd_send.load_mode == LOAD_REVERSE;
-        }else if (shoot_cmd_send.shoot_num == 1)
+
+        if (shoot_cmd_send.shoot_num == 1)
         {
             shoot_cmd_send.load_mode = LOAD_VISION;
         }else if (shoot_cmd_send.shoot_num == 0)
