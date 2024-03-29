@@ -185,6 +185,10 @@ static void RemoteControlSet()
         {
             shoot_cmd_send.load_mode = LOAD_STOP;
         }
+        if ((vision_recv_data->ACTION_DATA.reserved_slot/10) == 2)
+        {
+            shoot_cmd_send.load_mode == LOAD_REVERSE;
+        }
         if (vision_recv_data->ACTION_DATA.reserved_slot%10 == 2)
         {
             chassis_cmd_send.vy = 10000;
@@ -197,7 +201,6 @@ static void RemoteControlSet()
         {
             chassis_cmd_send.vy = -10000;
         }
-        
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
         gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
