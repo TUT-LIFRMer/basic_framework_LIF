@@ -314,48 +314,48 @@ void DJIMotorControl()
     {
         if (sender_enable_flag[i])
         {
-            //对底盘的输出进行功率限制（如果底盘挂载的can变化需要及时更改这里的设置）
-            // if (sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200)
-            // {
-            //     int16_t motor1_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
-            //     int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
-            //     int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
-            //     int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
-                
+          //  对底盘的输出进行功率限制（如果底盘挂载的can变化需要及时更改这里的设置）
+            if (sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200)
+            {
+                int16_t motor1_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
+                int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
+                int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
+                int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
 
-            //     if (chassis_motor_feedback.buffer_energy < 60)
-            //     {
-            //         if (chassis_motor_feedback.buffer_energy < 30)
-            //         {
-            //             if (chassis_motor_feedback.buffer_energy < 10)
-            //             {
-            //                 motor1_set = (int16_t)((float)motor1_set*0.2);
-            //                 motor2_set = (int16_t)((float)motor2_set*0.2);
-            //                 motor3_set = (int16_t)((float)motor3_set*0.2);
-            //                 motor4_set = (int16_t)((float)motor4_set*0.2);
-            //             }else{
-            //                 motor1_set = (int16_t)((float)motor1_set*0.4);
-            //                 motor2_set = (int16_t)((float)motor2_set*0.4);
-            //                 motor3_set = (int16_t)((float)motor3_set*0.4);
-            //                 motor4_set = (int16_t)((float)motor4_set*0.4);
-            //             }
-                        
-            //         }else{
-            //             motor1_set = (int16_t)((float)motor1_set*0.6);
-            //             motor2_set = (int16_t)((float)motor2_set*0.6);
-            //             motor3_set = (int16_t)((float)motor3_set*0.6);
-            //             motor4_set = (int16_t)((float)motor4_set*0.6);
-            //         }
-            //     }
-            //     sender_assignment[i].tx_buff[0] = (uint8_t)(motor1_set>>8);
-            //     sender_assignment[i].tx_buff[1] = (uint8_t)(motor1_set&0x00ff);
-            //     sender_assignment[i].tx_buff[2] = (uint8_t)(motor2_set>>8);
-            //     sender_assignment[i].tx_buff[3] = (uint8_t)(motor2_set&0x00ff);
-            //     sender_assignment[i].tx_buff[4] = (uint8_t)(motor3_set>>8);
-            //     sender_assignment[i].tx_buff[5] = (uint8_t)(motor3_set&0x00ff); 
-            //     sender_assignment[i].tx_buff[6] = (uint8_t)(motor4_set>>8);
-            //     sender_assignment[i].tx_buff[7] = (uint8_t)(motor4_set&0x00ff);
-            // }
+
+                if (chassis_motor_feedback.buffer_energy < 60)
+                {
+                    if (chassis_motor_feedback.buffer_energy < 30)
+                    {
+                        if (chassis_motor_feedback.buffer_energy < 10)
+                        {
+                            motor1_set = (int16_t)((float)motor1_set*0.2);
+                            motor2_set = (int16_t)((float)motor2_set*0.2);
+                            motor3_set = (int16_t)((float)motor3_set*0.2);
+                            motor4_set = (int16_t)((float)motor4_set*0.2);
+                        }else{
+                            motor1_set = (int16_t)((float)motor1_set*0.4);
+                            motor2_set = (int16_t)((float)motor2_set*0.4);
+                            motor3_set = (int16_t)((float)motor3_set*0.4);
+                            motor4_set = (int16_t)((float)motor4_set*0.4);
+                        }
+
+                    }else{
+                        motor1_set = (int16_t)((float)motor1_set*0.6);
+                        motor2_set = (int16_t)((float)motor2_set*0.6);
+                        motor3_set = (int16_t)((float)motor3_set*0.6);
+                        motor4_set = (int16_t)((float)motor4_set*0.6);
+                    }
+                }
+                sender_assignment[i].tx_buff[0] = (uint8_t)(motor1_set>>8);
+                sender_assignment[i].tx_buff[1] = (uint8_t)(motor1_set&0x00ff);
+                sender_assignment[i].tx_buff[2] = (uint8_t)(motor2_set>>8);
+                sender_assignment[i].tx_buff[3] = (uint8_t)(motor2_set&0x00ff);
+                sender_assignment[i].tx_buff[4] = (uint8_t)(motor3_set>>8);
+                sender_assignment[i].tx_buff[5] = (uint8_t)(motor3_set&0x00ff);
+                sender_assignment[i].tx_buff[6] = (uint8_t)(motor4_set>>8);
+                sender_assignment[i].tx_buff[7] = (uint8_t)(motor4_set&0x00ff);
+            }
             CANTransmit(&sender_assignment[i], 1);
         }
     }

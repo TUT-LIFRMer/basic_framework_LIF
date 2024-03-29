@@ -12,52 +12,52 @@
 #include "bsp_dwt.h"
 #include "bsp_log.h"
 
-// 私有宏,自动将编码器转换成角度值
+// 私有�?,�?动将编码器转换成角度�?
 #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
 #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) // pitch水平时电机的角度,0-360
 
 /* cmd应用包含的模块实例指针和交互信息存储*/
-#ifdef GIMBAL_BOARD // 对双板的兼容,条件编译
+#ifdef GIMBAL_BOARD // 对双板的兼�??,条件编译
 #include "can_comm.h"
 static CANCommInstance *cmd_can_comm; // 双板通信
 #endif
 #ifdef ONE_BOARD
-static Publisher_t *chassis_cmd_pub;   // 底盘控制消息发布者
-static Subscriber_t *chassis_feed_sub; // 底盘反馈信息订阅者
+static Publisher_t *chassis_cmd_pub;   // 底盘控制消息发布�?
+static Subscriber_t *chassis_feed_sub; // 底盘反�?�信�?订阅�?
 #endif                                 // ONE_BOARD
 
-static Chassis_Ctrl_Cmd_s chassis_cmd_send;      // 发送给底盘应用的信息,包括控制信息和UI绘制相关
-static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反馈信息信息,底盘功率枪口热量与底盘运动状态等
+static Chassis_Ctrl_Cmd_s chassis_cmd_send;      // 发送给底盘应用的信�?,包括控制信息和UI绘制相关
+static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�?�信�?信息,底盘功率�?口热量与底盘运动状态等
 
-static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
-static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
-// static Vision_Send_s vision_send_data;  // 视觉发送数据
+static RC_ctrl_t *rc_data;              // 遥控器数�?,初�?�化时返�?
+static Vision_Recv_s *vision_recv_data; // 视�?�接收数�?指针,初�?�化时返�?
+// static Vision_Send_s vision_send_data;  // 视�?�发送数�?
 
-static Publisher_t *gimbal_cmd_pub;            // 云台控制消息发布者
-static Subscriber_t *gimbal_feed_sub;          // 云台反馈信息订阅者
-static Gimbal_Ctrl_Cmd_s gimbal_cmd_send;      // 传递给云台的控制信息
-static Gimbal_Upload_Data_s gimbal_fetch_data; // 从云台获取的反馈信息
+static Publisher_t *gimbal_cmd_pub;            // 云台控制消息发布�?
+static Subscriber_t *gimbal_feed_sub;          // 云台反�?�信�?订阅�?
+static Gimbal_Ctrl_Cmd_s gimbal_cmd_send;      // 传递给云台的控制信�?
+static Gimbal_Upload_Data_s gimbal_fetch_data; // 从云台获取的反�?�信�?
+  
+static Publisher_t *shoot_cmd_pub;           // 发射控制消息发布�?
+static Subscriber_t *shoot_feed_sub;         // 发射反�?�信�?订阅�?
+static Shoot_Ctrl_Cmd_s shoot_cmd_send;      // 传递给发射的控制信�?
+static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反�?�信�?
 
-static Publisher_t *shoot_cmd_pub;           // 发射控制消息发布者
-static Subscriber_t *shoot_feed_sub;         // 发射反馈信息订阅者
-static Shoot_Ctrl_Cmd_s shoot_cmd_send;      // 传递给发射的控制信息
-static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反馈信息
-
-static Robot_Status_e robot_state; // 机器人整体工作状态
+static Robot_Status_e robot_state; // 机器人整体工作状�?
 
 
 
 void RobotCMDInit()
 {
-    rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个
-    vision_recv_data = VisionInit(&huart1); // 视觉通信串口
+    rc_data = RemoteControlInit(&huart3);   // �?改为对应串口,注意如果�?�?研板dbus协�??串口需选用添加了反相器的那�?
+    vision_recv_data = VisionInit(&huart1); // 视�?�通信串口
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     shoot_cmd_pub = PubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
     shoot_feed_sub = SubRegister("shoot_feed", sizeof(Shoot_Upload_Data_s));
 
-#ifdef ONE_BOARD // 双板兼容
+#ifdef ONE_BOARD // 双板兼�??
     chassis_cmd_pub = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
     chassis_feed_sub = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 #endif // ONE_BOARD
@@ -82,10 +82,10 @@ void RobotCMDInit()
     shoot_cmd_send.lid_mode = LID_CLOSE;
     shoot_cmd_send.friction_mode = FRICTION_OFF;
     shoot_cmd_send.bullet_speed = BULLET_SPEED_NONE;
-    robot_state = ROBOT_READY; // 启动时机器人进入工作模式,后续加入所有应用初始化完成之后再进入
+    robot_state = ROBOT_READY; // �?动时机器人进入工作模�?,后续加入所有应用初始化完成之后再进�?
 }
 
-//用于转换电机的真实角度
+//用于�?换电机的真实角度
 // int16_t map_value(float value, float *ori_scope, float *target_scope) {
 
 //     float from_range = ori_scope[1] - ori_scope[0];
@@ -98,23 +98,23 @@ void RobotCMDInit()
 // }
 
 /**
- * @brief 根据gimbal app传回的当前电机角度计算和零位的误差
- *        单圈绝对角度的范围是0~360,说明文档中有图示
+ * @brief 根据gimbal app传回的当前电机�?�度计算和零位的�?�?
+ *        单圈绝�?��?�度的范围是0~360,说明文档�?有图�?
  *
  */
 static void CalcOffsetAngle()
 {
-    // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
+    // �?名angle提高�?读�?,不然�?长了不好�?,虽然基本不会动这�?函数
     static float angle;
     angle = gimbal_fetch_data.yaw_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度
-#if YAW_ECD_GREATER_THAN_4096                               // 如果大于180度
+#if YAW_ECD_GREATER_THAN_4096                               // 如果大于180�?
     if (angle > YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else if (angle <= YAW_ALIGN_ANGLE && angle >= YAW_ALIGN_ANGLE - 180.0f)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE + 360.0f;
-#else // 小于180度
+#else // 小于180�?
     if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else if (angle > 180.0f + YAW_ALIGN_ANGLE)
@@ -125,17 +125,17 @@ static void CalcOffsetAngle()
 }
 
 // int16_t CalcNowYawDirection (){
-//         // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
+//         // �?名angle提高�?读�?,不然�?长了不好�?,虽然基本不会动这�?函数
 //     static float angle;
 //     angle = gimbal_fetch_data.yaw_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度
-// #if YAW_ECD_GREATER_THAN_4096                               // 如果大于180度
+// #if YAW_ECD_GREATER_THAN_4096                               // 如果大于180�?
 //     if (angle > YAW_ALIGN_ANGLE)
 //         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
 //     else if (angle <= YAW_ALIGN_ANGLE && angle >= YAW_ALIGN_ANGLE - 180.0f)
 //         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
 //     else
 //         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE + 360.0f;
-// #else // 小于180度
+// #else // 小于180�?
 //     if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
 //         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
 //     else if (angle > 180.0f + YAW_ALIGN_ANGLE)
@@ -147,29 +147,29 @@ static void CalcOffsetAngle()
 // }
 
 /**
- * @brief 控制输入为遥控器(调试时)的模式和控制量设置
+ * @brief 控制输入为遥控器(调试�?)的模式和控制量�?�置
  *
  */
 static void RemoteControlSet()
 {
 
-    // 控制底盘和云台运行模式,云台待添加,云台是否始终使用IMU数据?
+    // 控制底盘和云台运行模�?,云台待添�?,云台�?否�?�终使用IMU数据?
     if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中]或[上],底盘跟随云台
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
     }
-    else if (switch_is_down(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[下],底盘和云台分离,底盘保持不转动
+    else if (switch_is_down(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[下],底盘和云台分�?,底盘保持不转�?
     {
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
     }
-    else if (switch_is_up(rc_data[TEMP].rc.switch_right))//右侧开关为上为小陀螺模式
+    else if (switch_is_up(rc_data[TEMP].rc.switch_right))//右侧开关为上为小陀螺模�?
     {
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
     }
-    // 左侧开关状态为[下],遥控器控制下启动视觉调试
+    // 左侧开关状态为[下],遥控器控制下�?动�?��?�调�?
     if (switch_is_down(rc_data[TEMP].rc.switch_left))
     {
         gimbal_cmd_send.yaw = /*(0.005f * (float)rc_data[TEMP].rc.rocker_l_ */ ((0.0001f * (float)vision_recv_data->ACTION_DATA.relative_yaw)/0.0174533f /*- gimbal_cmd_send.yaw*/);
@@ -196,13 +196,13 @@ static void RemoteControlSet()
             gimbal_cmd_send.pitch = -20;
         }
     }
-    // 按照摇杆的输出大小进行角度增量,增益系数需调整
+    // 按照摇杆的输出大小进行�?�度增量,增益系数需调整
 
-    // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
+    // 底盘参数,�?前没有加入小陀�?(调试似乎暂时没有必�??),系数需要调�?
     chassis_cmd_send.vx = 1000.0f * (float)rc_data[TEMP].rc.rocker_r_; // 右侧摇杆竖直方向控制x方向速度
     chassis_cmd_send.vy = 1000.0f * (float)rc_data[TEMP].rc.rocker_r1; // 右侧摇杆水平方向控制y方向速度
 
-    // 摩擦轮控制,拨轮向上打为负,向下为正
+    // 摩擦�?控制,拨轮向上打为�?,向下为�??
     if (shoot_cmd_send.friction_mode == FRICTION_ON)
     {
         shoot_cmd_send.shoot_mode = SHOOT_ON;
@@ -319,7 +319,7 @@ static void MouseKeySet()
     }
 
 
-    switch (rc_data[TEMP].key[KEY_PRESS].r) // R键开关弹舱
+    switch (rc_data[TEMP].key[KEY_PRESS].r) // R�?开关弹�?
     {
     case 0:
         shoot_cmd_send.lid_mode = LID_CLOSE;
@@ -329,7 +329,7 @@ static void MouseKeySet()
         shoot_cmd_send.lid_mode = LID_OPEN;
         break;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F�?开关摩擦轮
     {
     case 0:
         shoot_cmd_send.friction_mode = FRICTION_OFF;
@@ -340,7 +340,7 @@ static void MouseKeySet()
         shoot_cmd_send.bullet_speed = 30;
         break;
     }
-    switch (rc_data[TEMP].key[KEY_PRESS].shift) // 小陀螺
+    switch (rc_data[TEMP].key[KEY_PRESS].shift) // 小陀�?
     {
     case 1:
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
@@ -365,7 +365,7 @@ static void MouseKeySet()
     {
         shoot_cmd_send.load_mode = LOAD_STOP;
     }
-    switch (rc_data[TEMP].key[KEY_PRESS].c) // C键设置播弹盘反转
+    switch (rc_data[TEMP].key[KEY_PRESS].c) // C�?设置�?弹盘反转
     {
     case 0:
 
@@ -379,7 +379,7 @@ static void MouseKeySet()
     }
     if (rc_data[TEMP].mouse.press_l == 1)
     {
-        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // z键设置发射模式
+        switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z]%2) // z�?设置发射模式
         {
         case 0:
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
@@ -401,16 +401,16 @@ static void MouseKeySet()
 }
 
 /**
- * @brief  紧急停止,包括遥控器左上侧拨轮打满/重要模块离线/双板通信失效等
- *         停止的阈值'300'待修改成合适的值,或改为开关控制.
+ * @brief  紧急停�?,包括遥控器左上侧拨轮打满/重�?�模块�?�线/双板通信失效�?
+ *         停�?�的阈�?'300'待修改成合适的�?,或改为开关控�?.
  *
- * @todo   后续修改为遥控器离线则电机停止(关闭遥控器急停),通过给遥控器模块添加daemon实现
+ * @todo   后续�?改为遥控器�?�线则电机停�?(关闭遥控器急停),通过给遥控器模块添加daemon实现
  *
  */
 static void EmergencyHandler()
 {
-    // 拨轮的向下拨超过一半进入急停模式.注意向打时下拨轮是正
-    if (rc_data[TEMP].lost_flag == 1 || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
+    // 拨轮的向下拨超过一半进入急停模式.注意向打时下拨轮�?�?
+    if (rc_data[TEMP].lost_flag == 1 || robot_state == ROBOT_STOP) // 还需添加重�?�应用和模块离线的判�?
     {
         robot_state = ROBOT_STOP;
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
@@ -420,7 +420,7 @@ static void EmergencyHandler()
         shoot_cmd_send.load_mode = LOAD_STOP;
         LOGERROR("[CMD] emergency stop!");
     }
-    // 遥控器右侧开关为[上],恢复正常运行
+    // 遥控器右侧开关为[上],恢�?��?�常运�??
     if (rc_data[TEMP].lost_flag == 0)
     {
         robot_state = ROBOT_READY;
@@ -429,10 +429,10 @@ static void EmergencyHandler()
     }
 }
 
-/* 机器人核心控制任务,200Hz频率运行(必须高于视觉发送频率) */
+/* 机器人核心控制任�?,200Hz频率运�??(必须高于视�?�发送�?�率) */
 void RobotCMDTask()
 {
-    // 从其他应用获取回传数据
+    // 从其他应用获取回传数�?
 #ifdef ONE_BOARD
     SubGetMessage(chassis_feed_sub, (void *)&chassis_fetch_data);
 #endif // ONE_BOARD
@@ -442,14 +442,14 @@ void RobotCMDTask()
     SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
     SubGetMessage(gimbal_feed_sub, &gimbal_fetch_data);
 
-    // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
+    // 根据gimbal的反馈值�?�算云台和底盘�?�方向的夹�??,不需要传�?,通过static私有变量完成
     CalcOffsetAngle();
-    // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
-    if (switch_is_mid(rc_data[TEMP].rc.switch_left)||switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[中]或[下],遥控器控制
+    // 根据遥控器左侧开�?,�?定当前使用的控制模式为遥控器调试还是�?�?
+    if (switch_is_mid(rc_data[TEMP].rc.switch_left)||switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[中]或[下],遥控器控�?
     {
         RemoteControlSet();
     }
-    else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制和相关模式选择
+    else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],�?盘控制和相关模式选择
     {
         if (switch_is_down(rc_data[TEMP].rc.switch_right))
         {
@@ -475,13 +475,21 @@ void RobotCMDTask()
             shoot_cmd_send.lid_mode = LID_CLOSE;
         }
     }
-    EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
+    EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情�?
 
-    // 设置视觉发送数据,还需增加加速度和角速度数据
+////////////////////////////////////////////////////
+    float a = chassis_fetch_data.chassis_power_limit;
+    char printf_buf[10];//这个变量已经在bsp_log.c中定义是全局变量不需要每次使用的时候在函数中声明本质上是储存字符串的内存缓存区
+    Float2Str(printf_buf,a);
+    PrintLog("power limit=%s\n",printf_buf);//默认显示在终端0上
+ ////////////////////////////////////////////////////////////////////////////////
+
+
+    // 设置视�?�发送数�?,还需增加加速度和�?�速度数据
     // VisionSetFlag(chassis_fetch_data.enemy_color,,chassis_fetch_data.bullet_speed)
 
-    // 推送消息,双板通信,视觉通信等
-    // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
+    // 推送消�?,双板通信,视�?�通信�?
+    // 其他应用所需的控制数�?在remotecontrolsetmode和mousekeysetmode�?完成设置
 #ifdef ONE_BOARD
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
 #endif // ONE_BOARD
