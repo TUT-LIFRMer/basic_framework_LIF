@@ -193,11 +193,11 @@ static void RemoteControlSet()
         {
             chassis_cmd_send.vy = 10000;
         }
-        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
+        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
         {
             chassis_cmd_send.vy = 0;
         }
-        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
+        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
         {
             chassis_cmd_send.vy = -10000;
         }
