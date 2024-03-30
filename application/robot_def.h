@@ -198,6 +198,7 @@ typedef struct
     float shoot_heat;
     float shoot_heat_limit;
     float chassis_power_limit;
+    int16_t robot_HP;
 
 } Chassis_Upload_Data_s;
 

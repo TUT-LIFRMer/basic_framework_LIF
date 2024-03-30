@@ -14,6 +14,8 @@ static Publisher_t *gimbal_pub;                   // 云台应用消息发布者
 static Subscriber_t *gimbal_sub;     // cmd控制消息订阅者
 static Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态信息
 static Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
+static Subscriber_t *chassis_sub;     // 底盘裁判系统数据订阅者
+static Chassis_Upload_Data_s chassis_refe_data; // 底盘裁判系统数据
 static Vision_Send_s vision_send_data; // 云台视觉数据 
 
 void GimbalInit()
@@ -99,6 +101,7 @@ void GimbalInit()
 
     gimbal_pub = PubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     gimbal_sub = SubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
+    chassis_sub = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 }
 
 /* 机器人云台控制核心任务,后续考虑只保留IMU控制,不再需要电机的反馈 */
@@ -107,6 +110,7 @@ void GimbalTask()
     // 获取云台控制数据
     // 后续增加未收到数据的处理
     SubGetMessage(gimbal_sub, &gimbal_cmd_recv);
+    SubGetMessage(chassis_sub, &chassis_refe_data);
     // @todo:现在已不再需要电机反馈,实际上可以始终使用IMU的姿态数据来作为云台的反馈,yaw电机的offset只是用来跟随底盘
     // 根据控制模式进行电机反馈切换和过渡,视觉模式在robot_cmd模块就已经设置好,gimbal只看yaw_ref和pitch_ref
     switch (gimbal_cmd_recv.gimbal_mode)
@@ -153,7 +157,7 @@ void GimbalTask()
     vision_send_data.fire_times = 0;
     vision_send_data.present_pitch = gimbal_feedback_data.gimbal_imu_data.Pitch;
     vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.Yaw;   
-    vision_send_data.reserved_slot = 0;
+    vision_send_data.reserved_slot = chassis_refe_data.robot_HP;
     VisionSend(&vision_send_data);
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
