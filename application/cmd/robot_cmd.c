@@ -183,21 +183,21 @@ static void RemoteControlSet()
         {
             shoot_cmd_send.load_mode = LOAD_STOP;
         }
+        
         if (vision_recv_data->ACTION_DATA.reserved_slot / 10 == 2)
         {
             shoot_cmd_send.load_mode = LOAD_REVERSE;
             shoot_cmd_send.shoot_rate = 8;
             shoot_cmd_send.shoot_num = 0;
         }
+
         if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 2)
         {
             chassis_cmd_send.vy = 10000;
-        }
-        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
+        }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
         {
             chassis_cmd_send.vy = 0;
-        }
-        if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
+        }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
         {
             chassis_cmd_send.vy = -10000;
         }
@@ -307,7 +307,7 @@ static void MouseKeySet()
     else{
         chassis_cmd_send.chassis_speed_buff = 15000;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) 
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) //手动选择底盘速度
     {
     case 0:
         break;
@@ -324,16 +324,29 @@ static void MouseKeySet()
     chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].a * chassis_cmd_send.chassis_speed_buff; // 系数待测
     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
 
-    gimbal_cmd_send.yaw -= (float)rc_data[TEMP].mouse.x / 660*5; // 系数待测
-    gimbal_cmd_send.pitch -= (float)rc_data[TEMP].mouse.y / 660*5;
-
-    if (gimbal_cmd_send.pitch > 50)
+    if (rc_data[TEMP].mouse.press_r == 1)
     {
-        gimbal_cmd_send.pitch = 50;
-    }
-    if (gimbal_cmd_send.pitch < -20)
-    {
-        gimbal_cmd_send.pitch = -20;
+        gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+        gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
+        if (gimbal_cmd_send.pitch > 50)
+        {
+            gimbal_cmd_send.pitch = 50;
+        }
+        if (gimbal_cmd_send.pitch < -20)
+        {
+            gimbal_cmd_send.pitch = -20;
+        }
+    } else {
+        gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
+        gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
+        if (gimbal_cmd_send.pitch > 50)
+        {
+            gimbal_cmd_send.pitch = 50;
+        }
+        if (gimbal_cmd_send.pitch < -20)
+        {
+            gimbal_cmd_send.pitch = -20;
+        }
     }
 
 
