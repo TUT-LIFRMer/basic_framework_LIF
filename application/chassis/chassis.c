@@ -63,15 +63,15 @@ void ChassisInit()
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
             .speed_PID = {
-                .Kp = 10, // 4.5
-                .Ki = 0,  // 0
+                .Kp = 5, // 4.5
+                .Ki = 1,  // 0
                 .Kd = 0,  // 0
                 .IntegralLimit = 3000,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 12000,
             },
             .current_PID = {
-                .Kp = 0.5, // 0.4
+                .Kp = 0.4, // 0.4
                 .Ki = 0,   // 0
                 .Kd = 0,
                 .IntegralLimit = 3000,
