@@ -63,15 +63,15 @@ void ChassisInit()
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
             .speed_PID = {
-                .Kp = 10, // 4.5
-                .Ki = 0,  // 0
+                .Kp = 5, // 4.5
+                .Ki = 1,  // 0
                 .Kd = 0,  // 0
                 .IntegralLimit = 3000,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 12000,
             },
             .current_PID = {
-                .Kp = 0.5, // 0.4
+                .Kp = 0.4, // 0.4
                 .Ki = 0,   // 0
                 .Kd = 0,
                 .IntegralLimit = 3000,
@@ -249,7 +249,8 @@ void ChassisTask()
 
     chassis_feedback_data.shoot_heat = (float)referee_data->PowerHeatData.shooter_17mm_1_barrel_heat;
     chassis_feedback_data.shoot_heat_limit = (float)referee_data->GameRobotState.shooter_barrel_heat_limit;
-
+    
+    chassis_feedback_data.robot_HP = referee_data->GameRobotState.current_HP;
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();
