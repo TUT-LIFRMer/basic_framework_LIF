@@ -135,8 +135,8 @@ void ShootTask()
         DJIMotorEnable(loader);
     }
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
-    if (chassis_data.shoot_heat < chassis_data.shoot_heat_limit-10)
-    {
+    // if (chassis_data.shoot_heat < chassis_data.shoot_heat_limit-10)
+    // {
         // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
         switch (shoot_cmd_recv.bullet_speed)
         {
@@ -213,10 +213,10 @@ void ShootTask()
             while (1)
                 ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
         }
-    }else{
-        DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
-        DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
-    }
+    // }else{
+    //     DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
+    //     DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
+    // }
 
 
     
