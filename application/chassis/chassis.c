@@ -225,8 +225,8 @@ void ChassisTask()
     static float sin_theta, cos_theta;
     cos_theta = arm_cos_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
     sin_theta = arm_sin_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
-    chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;  
-    chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
+    chassis_vy = chassis_cmd_recv.vy * cos_theta - chassis_cmd_recv.vx * sin_theta;  
+    chassis_vx = chassis_cmd_recv.vy * sin_theta - chassis_cmd_recv.vx * cos_theta;
 
     // 根据控制模式进行正运动学解算,计算底盘输出
     MecanumCalculate();
