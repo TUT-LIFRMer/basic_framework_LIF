@@ -112,8 +112,15 @@ void GimbalTask()
     vision_send_data.sof = 'P';
     vision_send_data.fire_times = 0;
     vision_send_data.present_pitch = gimbal_feedback_data.gimbal_imu_data.Pitch;
-    vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.Yaw;   
-    vision_send_data.reserved_slot = chassis_refe_data.robot_HP;
+    vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.Yaw;
+    if (chassis_refe_data.game_progress == 4 )
+    {
+        vision_send_data.reserved_slot = chassis_refe_data.robot_HP;
+    } else {
+        vision_send_data.reserved_slot = 0;
+    }
+       
+    
     VisionSend(&vision_send_data);
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
