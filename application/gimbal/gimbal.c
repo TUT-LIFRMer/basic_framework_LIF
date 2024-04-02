@@ -25,7 +25,7 @@ void GimbalInit()
     Motor_Init_Config_s yaw_config = {
         .can_init_config = {
             .can_handle = &hcan1,
-            .tx_id = 1,
+            .tx_id = 4,
         },
         .controller_param_init_config = {
             .angle_PID = {
@@ -61,14 +61,14 @@ void GimbalInit()
     // PITCH
     Motor_Init_Config_s pitch_config = {
         .can_init_config = {
-            .can_handle = &hcan2,
-            .tx_id = 1,
+            .can_handle = &hcan1,
+            .tx_id = 3,
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = -10, // 10
-                .Ki = -2,
-                .Kd = 0,
+                .Kp = -16, // 10
+                .Ki = -4,
+                .Kd = -1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 500,
@@ -157,7 +157,7 @@ void GimbalTask()
     vision_send_data.fire_times = 0;
     vision_send_data.present_pitch = gimbal_feedback_data.gimbal_imu_data.Pitch;
     vision_send_data.present_yaw = gimbal_feedback_data.gimbal_imu_data.Yaw;   
-    vision_send_data.reserved_slot = chassis_refe_data.robot_HP;
+    vision_send_data.reserved_slot = 0;
     VisionSend(&vision_send_data);
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
