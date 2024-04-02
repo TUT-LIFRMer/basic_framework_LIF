@@ -448,6 +448,8 @@ static void EmergencyHandler()
         {
             robot_state = ROBOT_READY;
             shoot_cmd_send.shoot_mode = SHOOT_ON;
+            chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+            gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
             gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
             gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
             shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;

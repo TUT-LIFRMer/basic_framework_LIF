@@ -25,12 +25,12 @@ void GimbalInit()
     Motor_Init_Config_s yaw_config = {
         .can_init_config = {
             .can_handle = &hcan1,
-            .tx_id = 4,
+            .tx_id = 2,
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = 8, // 8
-                .Ki = 4,
+                .Kp = 18, // 8
+                .Ki = 14,
                 .Kd = 1,
                 .DeadBand = 0.1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
@@ -62,7 +62,7 @@ void GimbalInit()
     Motor_Init_Config_s pitch_config = {
         .can_init_config = {
             .can_handle = &hcan1,
-            .tx_id = 3,
+            .tx_id = 1,
         },
         .controller_param_init_config = {
             .angle_PID = {
