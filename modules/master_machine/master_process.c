@@ -125,6 +125,7 @@ static void VisionOfflineCallback(void *id)
 {
 #ifdef VISION_USE_UART
     USARTServiceInit(vision_usart_instance);
+    recv_data.vision_start_flag = 0;
 #endif // !VISION_USE_UART
     LOGWARNING("[vision] vision offline, restart communication.");
 }
@@ -145,6 +146,7 @@ static void DecodeVision()
     // uint16_t flag_register;
     DaemonReload(vision_daemon_instance); // 喂狗
     get_protocol_info(vision_usart_instance->recv_buff, &recv_data);
+    recv_data.vision_start_flag = 1;
     // TODO: code to resolve flag_register;
 }
 

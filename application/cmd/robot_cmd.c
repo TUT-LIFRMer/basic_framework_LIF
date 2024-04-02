@@ -444,13 +444,37 @@ static void EmergencyHandler()
     // 拨轮的向下拨超过一半进入急停模式.注意向打时下拨轮是正
     if (rc_data[TEMP].lost_flag == 1 || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
     {
-        robot_state = ROBOT_STOP;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
-        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
-        shoot_cmd_send.shoot_mode = SHOOT_OFF;
-        shoot_cmd_send.friction_mode = FRICTION_OFF;
-        shoot_cmd_send.load_mode = LOAD_STOP;
-        LOGERROR("[CMD] emergency stop!");
+        if (vision_recv_data->vision_start_flag == 1)
+        {
+            robot_state = ROBOT_READY;
+            shoot_cmd_send.shoot_mode = SHOOT_ON;
+            gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+            gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
+            shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
+            if (shoot_cmd_send.shoot_num == 1)
+            {
+                shoot_cmd_send.load_mode = LOAD_VISION;
+            }else if (shoot_cmd_send.shoot_num == 0)
+            {
+                shoot_cmd_send.load_mode = LOAD_STOP;
+            }
+            
+            if (vision_recv_data->ACTION_DATA.reserved_slot / 10 == 2)
+            {
+                shoot_cmd_send.load_mode = LOAD_REVERSE;
+                shoot_cmd_send.shoot_rate = 8;
+                shoot_cmd_send.shoot_num = 0;
+            }
+        } else {
+            robot_state = ROBOT_STOP;
+            gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+            chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+            shoot_cmd_send.shoot_mode = SHOOT_OFF;
+            shoot_cmd_send.friction_mode = FRICTION_OFF;
+            shoot_cmd_send.load_mode = LOAD_STOP;
+            LOGERROR("[CMD] emergency stop!");
+        }
+
     }
     // 遥控器右侧开关为[上],恢复正常运行
     if (rc_data[TEMP].lost_flag == 0)
@@ -522,12 +546,5 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
-    // vision_send_data.sof = 'P';
-    // int send_pitch =  (int)(gimbal_fetch_data.gimbal_imu_data.Pitch*DEGREE_2_RAD*10000);
-    // int send_yaw =  (int)(gimbal_fetch_data.gimbal_imu_data.Yaw*DEGREE_2_RAD*10000);
-    // vision_send_data.present_pitch = (int16_t)(send_pitch>>16);
-    // vision_send_data.present_yaw = (int16_t)(send_yaw>>16);
-    // vision_send_data.present_debug_value = 0;
-    // vision_send_data.null_byte = 0;
-    // VisionSend(&vision_send_data);
+
 }

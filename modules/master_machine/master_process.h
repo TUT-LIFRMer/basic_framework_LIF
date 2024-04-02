@@ -56,6 +56,7 @@ typedef struct
     	int16_t reserved_slot  ;
     	uint32_t crc_check     ;
 	}ACTION_DATA;
+	uint8_t vision_start_flag;
 } Vision_Recv_s;
 
 typedef enum
