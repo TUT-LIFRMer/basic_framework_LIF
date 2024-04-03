@@ -152,8 +152,8 @@ void ShootTask()
             DJIMotorSetRef(friction_r, 0);
             break;
         case SMALL_AMU_30:
-            DJIMotorSetRef(friction_l, 45000);
-            DJIMotorSetRef(friction_r, 45000);
+            DJIMotorSetRef(friction_l, 43650);
+            DJIMotorSetRef(friction_r, 43650);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
             DJIMotorSetRef(friction_l, 30000);
