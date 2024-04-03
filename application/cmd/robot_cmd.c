@@ -187,19 +187,22 @@ static void RemoteControlSet()
         if (vision_recv_data->ACTION_DATA.reserved_slot / 10 == 2)
         {
             shoot_cmd_send.load_mode = LOAD_REVERSE;
-            shoot_cmd_send.shoot_rate = 8;
+            shoot_cmd_send.shoot_rate = 5;
             shoot_cmd_send.shoot_num = 0;
         }
 
         if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 2)
         {
             chassis_cmd_send.vy = 10000;
+             chassis_cmd_send.wz = 0;
         }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
         {
             chassis_cmd_send.vy = 0;
+            chassis_cmd_send.wz = 5000;
         }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
         {
             chassis_cmd_send.vy = -10000;
+            chassis_cmd_send.wz = 0;
         }
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
@@ -237,7 +240,7 @@ static void RemoteControlSet()
         if (rc_data[TEMP].rc.dial < -100)
         {
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-            shoot_cmd_send.shoot_rate = 8;
+            shoot_cmd_send.shoot_rate = 5;
             shoot_cmd_send.shoot_num = 0;
         }
         if ((rc_data[TEMP].rc.dial == 0) && (shoot_cmd_send.load_mode != LOAD_VISION) && (shoot_cmd_send.load_mode != LOAD_REVERSE)){
@@ -405,7 +408,7 @@ static void MouseKeySet()
 
     default:
         shoot_cmd_send.load_mode = LOAD_REVERSE;
-        shoot_cmd_send.shoot_rate = 8;
+        shoot_cmd_send.shoot_rate = 5;
         shoot_cmd_send.shoot_num = 0;
         break;
     }
@@ -415,7 +418,7 @@ static void MouseKeySet()
         {
         case 0:
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-            shoot_cmd_send.shoot_rate = 8;
+            shoot_cmd_send.shoot_rate = 5;
             shoot_cmd_send.shoot_num = 0;
             break;
         
