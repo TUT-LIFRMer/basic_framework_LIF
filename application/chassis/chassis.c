@@ -217,7 +217,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = 6000;
         if ((chassis_cmd_recv.vx == 0) && (chassis_cmd_recv.vy == 0))
         {
-            chassis_cmd_recv.wz = 8000;
+            chassis_cmd_recv.wz = 7000;
         }
         break;
     default:
