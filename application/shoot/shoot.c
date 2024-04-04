@@ -78,8 +78,8 @@ void ShootInit()
                 .MaxOut = 10000,
             },
             .speed_PID = {
-                .Kp = 15, // 10
-                .Ki = 3, // 1
+                .Kp = 18, // 10
+                .Ki = 4, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 5000,
@@ -149,8 +149,8 @@ void ShootTask()
         DJIMotorSetRef(friction_r, 0);
         break;
     case SMALL_AMU_30:
-        DJIMotorSetRef(friction_l, 36375);
-        DJIMotorSetRef(friction_r, 36375);
+        DJIMotorSetRef(friction_l, 40000);
+        DJIMotorSetRef(friction_r, 40000);
         break;
     default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
         DJIMotorSetRef(friction_l, 30000);
