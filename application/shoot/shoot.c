@@ -55,11 +55,11 @@ void ShootInit()
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
         },
         .motor_type = M3508};
-    friction_config.can_init_config.tx_id = 2;
+    friction_config.can_init_config.tx_id = 1;
     friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
     friction_l = DJIMotorInit(&friction_config);
 
-    friction_config.can_init_config.tx_id = 1; // 右摩擦轮,改txid和方向就行
+    friction_config.can_init_config.tx_id = 2; // 右摩擦轮,改txid和方向就行
     friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
     friction_r = DJIMotorInit(&friction_config);
 
@@ -72,10 +72,10 @@ void ShootInit()
         .controller_param_init_config = {
             .angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 20, // 10
-                .Ki = 15,
+                .Kp = 30, // 10
+                .Ki = 0,
                 .Kd = 0,
-                .MaxOut = 10000,
+                .MaxOut = 500,
             },
             .speed_PID = {
                 .Kp = 25, // 10
@@ -138,6 +138,7 @@ void ShootTask()
     // if (chassis_data.shoot_heat < chassis_data.shoot_heat_limit-10)
     // {
         // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
+
         switch (shoot_cmd_recv.bullet_speed)
         {
         case BULLET_SPEED_NONE:
@@ -162,6 +163,7 @@ void ShootTask()
         }
 
         // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
+    if(shoot_cmd_recv.friction_mode == FRICTION_ON){
         switch (shoot_cmd_recv.load_mode)
         {
         // 停止拨盘
@@ -213,10 +215,10 @@ void ShootTask()
             while (1)
                 ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
         }
-    // }else{
-    //     DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
-    //     DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
-    // }
+    }else{
+        DJIMotorOuterLoop(loader, SPEED_LOOP); // 切换到速度环
+        DJIMotorSetRef(loader, 0);             // 同时设定参考值为0,这样停止的速度最快
+    }
 
 
     

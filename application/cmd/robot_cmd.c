@@ -450,12 +450,17 @@ static void EmergencyHandler()
             shoot_cmd_send.shoot_mode = SHOOT_ON;
             chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
             gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
+            shoot_cmd_send.shoot_mode = SHOOT_ON;
+            shoot_cmd_send.friction_mode = FRICTION_ON;
+            shoot_cmd_send.bullet_speed = SMALL_AMU_30;
             gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
             gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
             shoot_cmd_send.shoot_num = vision_recv_data->ACTION_DATA.fire_times;
             if (shoot_cmd_send.shoot_num == 1)
             {
                 shoot_cmd_send.load_mode = LOAD_VISION;
+                shoot_cmd_send.shoot_rate = 8;
+                shoot_cmd_send.shoot_num = 0;
             }else if (shoot_cmd_send.shoot_num == 0)
             {
                 shoot_cmd_send.load_mode = LOAD_STOP;
