@@ -15,7 +15,7 @@
 // 私有宏,自动将编码器转换成角度值
 #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
 #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) // pitch水平时电机的角度,0-360
-
+#define shoot_frequency 8 //射击频率
 /* cmd应用包含的模块实例指针和交互信息存储*/
 #ifdef GIMBAL_BOARD // 对双板的兼容,条件编译
 #include "can_comm.h"
@@ -240,7 +240,7 @@ static void RemoteControlSet()
         if (rc_data[TEMP].rc.dial < -100)
         {
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-            shoot_cmd_send.shoot_rate = 4;
+            shoot_cmd_send.shoot_rate = shoot_frequency;
             shoot_cmd_send.shoot_num = 0;
         }
         if ((rc_data[TEMP].rc.dial == 0) && (shoot_cmd_send.load_mode != LOAD_VISION) && (shoot_cmd_send.load_mode != LOAD_REVERSE)){
@@ -310,20 +310,20 @@ static void MouseKeySet()
     else{
         chassis_cmd_send.chassis_speed_buff = 15000;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) //手动选择底盘速度
-    {
-    case 0:
-        break;
-    case 1:
-        chassis_cmd_send.chassis_speed_buff = 15000;
-        break;
-    case 2:
-        chassis_cmd_send.chassis_speed_buff = 28000;
-        break;
-    default:
-        chassis_cmd_send.chassis_speed_buff = 35000;
-        break;
-    }
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_X] % 4) //手动选择底盘速度
+    // {
+    // case 0:
+    //     break;
+    // case 1:
+    //     chassis_cmd_send.chassis_speed_buff = 15000;
+    //     break;
+    // case 2:
+    //     chassis_cmd_send.chassis_speed_buff = 28000;
+    //     break;
+    // default:
+    //     chassis_cmd_send.chassis_speed_buff = 35000;
+    //     break;
+    // }
     gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
     chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].a * chassis_cmd_send.chassis_speed_buff; // 系数待测
     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
@@ -342,8 +342,19 @@ static void MouseKeySet()
 
     if (rc_data[TEMP].mouse.press_r == 1)
     {
-        gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
-        gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
+        if (vision_recv_data->ACTION_DATA.abs_yaw == 0)
+        {
+            gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].mouse.x;
+            
+        }else if (vision_recv_data->ACTION_DATA.abs_pitch == 0)
+        {
+            gimbal_cmd_send.pitch -= 0.001f * (float)rc_data[TEMP].mouse.y;
+        }else{
+            gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+            gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
+        }
+        
+   
         if (gimbal_cmd_send.pitch > 50)
         {
             gimbal_cmd_send.pitch = 50;
@@ -366,7 +377,7 @@ static void MouseKeySet()
     }
 
 
-    switch (rc_data[TEMP].key[KEY_PRESS].r) // R键开关弹舱
+    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_R] % 2) // R键开关弹舱
     {
     case 0:
         shoot_cmd_send.lid_mode = LID_CLOSE;
@@ -376,18 +387,35 @@ static void MouseKeySet()
         shoot_cmd_send.lid_mode = LID_OPEN;
         break;
     }
-    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F键开关摩擦轮
+    if (chassis_cmd_send.vx != 0 && chassis_cmd_send.vy != 0)
     {
-    case 0:
-        shoot_cmd_send.friction_mode = FRICTION_OFF;
-        shoot_cmd_send.bullet_speed = 0;
-        break;
+        rc_data[TEMP].key_count[KEY_PRESS][Key_R] = 0;
+    }
     
-    default:
+    // switch (rc_data[TEMP].key[KEY_PRESS].f) // F键开关摩擦轮
+    // {
+    // case 0:
+    //     shoot_cmd_send.friction_mode = FRICTION_OFF;
+    //     shoot_cmd_send.bullet_speed = 0;
+    //     break;
+    
+    // default:
+    //     shoot_cmd_send.friction_mode = FRICTION_ON;
+    //     shoot_cmd_send.bullet_speed = 30;
+    //     break;
+    // }
+    if (rc_data[TEMP].key[KEY_PRESS].f == 1)
+    {
         shoot_cmd_send.friction_mode = FRICTION_ON;
         shoot_cmd_send.bullet_speed = 30;
-        break;
     }
+    if (rc_data[TEMP].key[KEY_PRESS].g == 1)
+    {
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+        shoot_cmd_send.bullet_speed = 0;
+    }
+    
+    
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // 小陀螺
     {
     case 1:
@@ -395,9 +423,14 @@ static void MouseKeySet()
         break;
 
     default:
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         break;
     }
+    if (chassis_cmd_send.vx != 0 && chassis_cmd_send.vy != 0)
+    {
+        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+    }
+    
     switch (rc_data[TEMP].key[KEY_PRESS].ctrl)
     {
     case 1:
@@ -406,7 +439,7 @@ static void MouseKeySet()
         break;
     
     default:
-        gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
+        
         break;
     }
     if (rc_data[TEMP].mouse.press_l == 0)
@@ -421,7 +454,7 @@ static void MouseKeySet()
 
     default:
         shoot_cmd_send.load_mode = LOAD_REVERSE;
-        shoot_cmd_send.shoot_rate = 4;
+        shoot_cmd_send.shoot_rate = shoot_frequency;
         shoot_cmd_send.shoot_num = 0;
         break;
     }
@@ -431,7 +464,7 @@ static void MouseKeySet()
         {
         case 0:
             shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-            shoot_cmd_send.shoot_rate = 4;
+            shoot_cmd_send.shoot_rate = shoot_frequency;
             shoot_cmd_send.shoot_num = 0;
             break;
         
