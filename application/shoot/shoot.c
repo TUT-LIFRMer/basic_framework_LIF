@@ -78,8 +78,8 @@ void ShootInit()
                 .MaxOut = 10000,
             },
             .speed_PID = {
-                .Kp = 10, // 10
-                .Ki = 1, // 1
+                .Kp = 15, // 10
+                .Ki = 3, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 5000,
