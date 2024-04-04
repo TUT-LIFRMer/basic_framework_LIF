@@ -353,8 +353,8 @@ static void MouseKeySet()
             gimbal_cmd_send.pitch = -20;
         }
     } else {
-        gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
-        gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
+        gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].mouse.x;
+        gimbal_cmd_send.pitch -= 0.001f * (float)rc_data[TEMP].mouse.y;
         if (gimbal_cmd_send.pitch > 50)
         {
             gimbal_cmd_send.pitch = 50;
