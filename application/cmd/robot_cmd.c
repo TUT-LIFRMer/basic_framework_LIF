@@ -426,16 +426,15 @@ static void MouseKeySet()
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         break;
     }
-    if (chassis_cmd_send.vx != 0 && chassis_cmd_send.vy != 0)
-    {
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
-    }
+    // if (chassis_cmd_send.vx != 0 && chassis_cmd_send.vy != 0)
+    // {
+    //     chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+    // }
     
     switch (rc_data[TEMP].key[KEY_PRESS].ctrl)
     {
     case 1:
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
+        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         break;
     
     default:
