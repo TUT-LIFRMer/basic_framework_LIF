@@ -134,6 +134,29 @@ void ShootTask()
         DJIMotorEnable(friction_r);
         DJIMotorEnable(loader);
     }
+    // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
+    switch (shoot_cmd_recv.bullet_speed)
+    {
+    case BULLET_SPEED_NONE:
+        DJIMotorSetRef(friction_l, 0);
+        DJIMotorSetRef(friction_r, 0);
+    case SMALL_AMU_15:
+        DJIMotorSetRef(friction_l, 0);
+        DJIMotorSetRef(friction_r, 0);
+        break;
+    case SMALL_AMU_18:
+        DJIMotorSetRef(friction_l, 0);
+        DJIMotorSetRef(friction_r, 0);
+        break;
+    case SMALL_AMU_30:
+        DJIMotorSetRef(friction_l, 36375);
+        DJIMotorSetRef(friction_r, 36375);
+        break;
+    default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
+        DJIMotorSetRef(friction_l, 30000);
+        DJIMotorSetRef(friction_r, 30000);
+        break;
+    }
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
     if (shoot_cmd_recv.friction_mode == FRICTION_ON)
     {
