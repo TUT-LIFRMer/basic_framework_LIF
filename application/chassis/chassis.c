@@ -146,10 +146,10 @@ void ChassisInit()
  */
 static void MecanumCalculate()
 {
-    vt_rf = chassis_vy*0.70710678118654752f - chassis_vx*0.70710678118654752f + chassis_cmd_recv.wz * 300;
-    vt_lf = chassis_vy*0.70710678118654752f + chassis_vx*0.70710678118654752f - chassis_cmd_recv.wz * 300;
-    vt_lb = chassis_vy*0.70710678118654752f - chassis_vx*0.70710678118654752f - chassis_cmd_recv.wz * 300;
-    vt_rb = chassis_vy*0.70710678118654752f + chassis_vx*0.70710678118654752f + chassis_cmd_recv.wz * 300;
+    vt_rf = chassis_vy*0.70710678118654752f - chassis_vx*0.70710678118654752f + chassis_cmd_recv.wz * 76;
+    vt_lf = chassis_vy*0.70710678118654752f + chassis_vx*0.70710678118654752f - chassis_cmd_recv.wz * 76;
+    vt_lb = chassis_vy*0.70710678118654752f - chassis_vx*0.70710678118654752f - chassis_cmd_recv.wz * 76;
+    vt_rb = chassis_vy*0.70710678118654752f + chassis_vx*0.70710678118654752f + chassis_cmd_recv.wz * 76;
 }
 
 /**
@@ -214,7 +214,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = 1.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = 5000;
+        chassis_cmd_recv.wz = 60;
         break;
     default:
         break;
