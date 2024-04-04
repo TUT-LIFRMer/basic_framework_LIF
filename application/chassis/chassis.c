@@ -215,6 +215,11 @@ void ChassisTask()
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
         chassis_cmd_recv.wz = 6000;
+        if ((chassis_cmd_recv.vx == 0) && (chassis_cmd_recv.vy == 0))
+        {
+            chassis_cmd_recv.wz = 8000;
+        }
+        
         break;
     default:
         break;
