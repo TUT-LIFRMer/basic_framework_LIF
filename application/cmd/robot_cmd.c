@@ -324,8 +324,21 @@ static void MouseKeySet()
         chassis_cmd_send.chassis_speed_buff = 35000;
         break;
     }
+    gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
     chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].a * chassis_cmd_send.chassis_speed_buff; // 系数待测
     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
+
+
+    // gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
+    // gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
+    // if (gimbal_cmd_send.pitch > 50)
+    // {
+    //     gimbal_cmd_send.pitch = 50;
+    // }
+    // if (gimbal_cmd_send.pitch < -20)
+    // {
+    //     gimbal_cmd_send.pitch = -20;
+    // }
 
     if (rc_data[TEMP].mouse.press_r == 1)
     {
