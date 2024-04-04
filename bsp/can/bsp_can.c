@@ -162,6 +162,15 @@ static void CANFIFOxCallback(CAN_HandleTypeDef *_hcan, uint32_t fifox)
                     can_instance[i]->rx_len = rxconf.DLC;                      // 保存接收到的数据长度
                     memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // 消息拷贝到对应实例
                     can_instance[i]->can_module_callback(can_instance[i]);     // 触发回调进行数据解析和处理
+                    //DEBUG
+                if (can_instance[i]->rx_id == 0X201 || can_instance[i]->rx_id == 0x204)
+                    {
+                        SEGGER_RTT_SetTerminal(1);//设置显示的终端
+                        sprintf(printf_buf,"can_instance_id:%d\r\n",can_instance[i]->rx_id);
+                        SEGGER_RTT_WriteString(0, printf_buf); 
+                    }
+                    
+
                 }
                 return;
             }
