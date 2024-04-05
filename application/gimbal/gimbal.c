@@ -66,9 +66,9 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = -30, // 10
-                .Ki = -4,
-                .Kd = -1,
+                .Kp = -20, // 10
+                .Ki = -90,
+                .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 1000,
