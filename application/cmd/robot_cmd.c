@@ -472,15 +472,16 @@ static void EmergencyHandler()
                 shoot_cmd_send.shoot_rate = 8;
                 shoot_cmd_send.shoot_num = 0;
             }
-        } else {
-            robot_state = ROBOT_STOP;
-            gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
-            chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
-            shoot_cmd_send.shoot_mode = SHOOT_OFF;
-            shoot_cmd_send.friction_mode = FRICTION_OFF;
-            shoot_cmd_send.load_mode = LOAD_STOP;
-            LOGERROR("[CMD] emergency stop!");
-        }
+        } 
+        // else {
+        //     robot_state = ROBOT_STOP;
+        //     gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+        //     chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+        //     shoot_cmd_send.shoot_mode = SHOOT_OFF;
+        //     shoot_cmd_send.friction_mode = FRICTION_OFF;
+        //     shoot_cmd_send.load_mode = LOAD_STOP;
+        //     LOGERROR("[CMD] emergency stop!");
+        // }
 
     }
     // 遥控器右侧开关为[上],恢复正常运行
