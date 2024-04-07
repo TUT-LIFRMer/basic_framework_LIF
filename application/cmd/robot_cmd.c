@@ -195,12 +195,15 @@ static void RemoteControlSet()
         if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 2)
         {
             chassis_cmd_send.vy = 10000;
+            chassis_cmd_send.wz = 100;
         }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 0)
         {
             chassis_cmd_send.vy = 0;
+            chassis_cmd_send.wz = 400;
         }else if (vision_recv_data->ACTION_DATA.reserved_slot % 10 == 1)
         {
             chassis_cmd_send.vy = -10000;
+            chassis_cmd_send.wz = 100;
         }
     } else {
         gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
