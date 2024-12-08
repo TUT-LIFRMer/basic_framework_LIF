@@ -82,7 +82,12 @@ static void JudgeReadData(uint8_t *buff)
 					break;
 				case ID_power_heat_data: // 0x0202
 					memcpy(&referee_info.PowerHeatData, (buff + DATA_Offset), LEN_power_heat_data);
-			
+					//以下代码为水评测用,读取裁判系统协议内全底盘参数,并使用H7tools发送电机功率至电脑
+						float chassispower_temp = referee_info.PowerHeatData.chassis_power; //电机功率临时显示，水评测用
+						SEGGER_RTT_SetTerminal(1);//设置显示的终端
+    					sprintf(printf_buf,"Chassis Power=%f\r\n",chassispower_temp);
+    					SEGGER_RTT_WriteString(0, printf_buf);
+						RTT_PrintWave_np(1,chassispower_temp);
 					break;
 				case ID_game_robot_pos: // 0x0203
 					memcpy(&referee_info.GameRobotPos, (buff + DATA_Offset), LEN_game_robot_pos);
