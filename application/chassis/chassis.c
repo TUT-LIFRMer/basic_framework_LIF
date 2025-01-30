@@ -13,6 +13,8 @@
 
 #include "chassis.h"
 #include "robot_def.h"
+#include "power_meter.h"
+#include "power_meter.h"
 #include "dji_motor.h"
 #include "super_cap.h"
 #include "message_center.h"
@@ -58,6 +60,9 @@ static float vt_lf, vt_rf, vt_lb, vt_rb; // 底盘速度解算后的临时输出
 
 void ChassisInit()
 {
+    // 初始化功率测量模块
+    PowerMeter_Init();
+    
     // 四个轮子的参数一样,改tx_id和反转标志位即可
     Motor_Init_Config_s chassis_motor_config = {
         .can_init_config.can_handle = &hcan1,
@@ -180,6 +185,9 @@ static void EstimateSpeed()
 /* 机器人底盘控制核心任务 */
 void ChassisTask()
 {
+    // 更新功率测量数据
+    PowerMeter_Update();
+    
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
 #ifdef ONE_BOARD
