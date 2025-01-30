@@ -82,7 +82,8 @@
         "controller.h": "c",
         "bit": "c",
         "new": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "power_meter.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
