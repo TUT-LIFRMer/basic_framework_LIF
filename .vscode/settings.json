@@ -84,7 +84,13 @@
         "new": "c",
         "stdarg.h": "c",
         "power_meter.h": "c",
-        "chassis.h": "c"
+        "chassis.h": "c",
+        "string.h": "c",
+        "cstdlib": "c",
+        "cmsis_os.h": "c",
+        "bsp_init.h": "c",
+        "crc_ref.h": "c",
+        "typeinfo": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",

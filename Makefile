@@ -139,6 +139,7 @@ modules/motor/step_motor/step_motor.c \
 modules/motor/servo_motor/servo_motor.c \
 modules/motor/motor_task.c \
 modules/oled/oled.c \
+modules/power_meter/power_meter.c \
 modules/referee/crc_ref.c \
 modules/referee/rm_referee.c \
 modules/referee/referee_UI.c \
@@ -258,6 +259,7 @@ C_INCLUDES =  \
 -Imodules/motor/servo_motor \
 -Imodules/motor \
 -Imodules/oled \
+-Imodules/power_meter \
 -Imodules/referee \
 -Imodules/remote \
 -Imodules/super_cap \
@@ -267,7 +269,8 @@ C_INCLUDES =  \
 -Imodules/vofa \
 -Imodules/alarm \
 -Imodules  \
--IMiddlewares/ST/ARM/DSP/Inc
+-IMiddlewares/ST/ARM/DSP/Inc \
+-Imodules
 
 
 # compile gcc flags
