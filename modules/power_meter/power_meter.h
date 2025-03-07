@@ -1,7 +1,8 @@
 #ifndef __POWER_METER_H
 #define __POWER_METER_H
 
-#include "modules/general_def.h"
+#include "general_def.h"
+#include <stdint.h>
 
 // INA226默认地址(A0/A1接地)
 #define INA226_ADDR         0x40
