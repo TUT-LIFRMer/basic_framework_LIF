@@ -91,7 +91,14 @@
         "bsp_init.h": "c",
         "crc_ref.h": "c",
         "typeinfo": "c",
-        "bsp_spi.h": "c"
+        "bsp_spi.h": "c",
+        "cstdarg": "c",
+        "xutility": "c",
+        "xtr1common": "c",
+        "utility": "c",
+        "stddef.h": "c",
+        "printf.h": "c",
+        "cstddef": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
