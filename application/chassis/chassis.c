@@ -243,7 +243,7 @@ void ChassisTask()
 
     // 推送反馈消息
 #ifdef ONE_BOARD
-    chassis_feedback_data.chassis_power = referee_data->PowerHeatData.chassis_power;
+    //chassis_feedback_data.chassis_power = referee_data->PowerHeatData.chassis_power;
     chassis_feedback_data.chassis_power_limit = (float)referee_data->GameRobotState.chassis_power_limit;
     chassis_feedback_data.buffer_energy = (float)referee_data->PowerHeatData.buffer_energy;
 
