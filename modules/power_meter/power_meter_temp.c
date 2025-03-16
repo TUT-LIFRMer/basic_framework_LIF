@@ -6,7 +6,7 @@
 
 static PowerData_t power_data;
 static float current_lsb = 0.001f;  // 1mA/bit (10A量程)
-static float shunt_resistor = 0.002f; // 2mΩ分流电阻
+static float shunt_resistor = 0.010f; // 10mΩ分流电阻
 
 static IICInstance *ina226_iic;  // 新增IIC实例指针
 
