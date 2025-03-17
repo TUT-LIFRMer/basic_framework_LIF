@@ -21,27 +21,30 @@ typedef struct
 // 此结构体包含裁判系统接收数据以及UI绘制与机器人车间通信的相关信息
 typedef struct
 {
-	referee_id_t referee_id;
+    referee_id_t referee_id;
 
-	xFrameHeader FrameHeader; // 接收到的帧头信息
-	uint16_t CmdID;
-	ext_game_state_t GameState;							   // 0x0001
-	ext_game_result_t GameResult;						   // 0x0002
-	ext_game_robot_HP_t GameRobotHP;					   // 0x0003
-	ext_event_data_t EventData;							   // 0x0101
-	ext_supply_projectile_action_t SupplyProjectileAction; // 0x0102
-	ext_game_robot_state_t GameRobotState;				   // 0x0201
-	ext_power_heat_data_t PowerHeatData;				   // 0x0202
-	ext_game_robot_pos_t GameRobotPos;					   // 0x0203
-	ext_buff_musk_t BuffMusk;							   // 0x0204
-	aerial_robot_energy_t AerialRobotEnergy;			   // 0x0205
-	ext_robot_hurt_t RobotHurt;							   // 0x0206
-	ext_shoot_data_t ShootData;							   // 0x0207
-	ext_shoot_num_and_gold_coin_t ShootNumAndGoldCoin;	   // 0x0208
-	// 自定义交互数据的接收
-	Communicate_ReceiveData_t ReceiveData;
+    xFrameHeader FrameHeader; // 接收到的帧头信息
+    uint16_t CmdID;
+    ext_game_state_t GameState;							   // 0x0001
+    ext_game_result_t GameResult;						   // 0x0002
+    ext_game_robot_HP_t GameRobotHP;					   // 0x0003
+    ext_event_data_t EventData;							   // 0x0101
+    // ext_supply_projectile_action_t SupplyProjectileAction;  0x0102 2025.3.14删除，2024.12.25 V1.7.0 删除该命令码
+    // ext_supply_projectile_booking_t SupplyProjectileBooking;  0x0103 2025.3.14删除，在裁判系统串口协议附录中未找到
+    referee_warning_t RefereeWarning;                       // 0x0104 2025.3.14添加
+    dart_info_t DartInfo;                                   // 0x0105 2025.3.14添加
+    ext_game_robot_state_t GameRobotState;				   // 0x0201
+    ext_power_heat_data_t PowerHeatData;				   // 0x0202
+    ext_game_robot_pos_t GameRobotPos;					   // 0x0203
+    ext_buff_musk_t BuffMusk;							   // 0x0204
+    // aerial_robot_energy_t AerialRobotEnergy;			    0x0205 2025.3.14删除，2024.12.25 V1.7.0 删除该命令码
+    ext_robot_hurt_t RobotHurt;							   // 0x0206
+    ext_shoot_data_t ShootData;							   // 0x0207
+    ext_shoot_num_and_gold_coin_t ShootNumAndGoldCoin;	   // 0x0208
+    // 自定义交互数据的接收
+    Communicate_ReceiveData_t ReceiveData;
 
-	uint8_t init_flag;
+    uint8_t init_flag;
 
 } referee_info_t;
 
