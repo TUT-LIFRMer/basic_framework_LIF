@@ -13,7 +13,6 @@
 
 #include "chassis.h"
 #include "robot_def.h"
-#include "power_meter.h"
 #include "dji_motor.h"
 #include "super_cap.h"
 #include "message_center.h"
@@ -60,46 +59,7 @@ static float vt_lf, vt_rf, vt_lb, vt_rb; // 底盘速度解算后的临时输出
 
 void ChassisInit()
 {
-    // 初始化四个INA226功率模块（使用I2C2接口，不同地址）
-    // -----------------------------------------------------------
-    // 基础配置模板
-    PowerMeter_Init_Config_s power_conf = {
-        .iic_init_config = {
-            .iic_handle = &hi2c2,
-            .id = "chassis_power",
-            .work_mode = IIC_BLOCK_MODE
-        },
-        .dev_address = 0x80, // 使用默认地址0x80
-        .id = "main_power"
-    };
-    PowerMeter_Init(&power_conf);
-
-    /*
-    // 右前轮功率模块 (实际地址0x80)
-    PowerMeter_Init_Config_s power_rf_conf = power_base_conf;
-    power_rf_conf.dev_address = 0x80;       // 硬件地址
-    power_rf_conf.id = "power_rf";          // 唯一标识
-    PowerMeterInstance* power_meter_rf = PowerMeter_Init(&power_rf_conf);
     
-    // 左前轮功率模块 (实际地址0x82) 
-    PowerMeter_Init_Config_s power_lf_conf = power_base_conf;
-    power_lf_conf.dev_address = 0x82;       // 0x41<<1=0x82
-    power_lf_conf.id = "power_lf";
-    PowerMeterInstance* power_meter_lf = PowerMeter_Init(&power_lf_conf);
-
-    // 左后轮功率模块 (实际地址0x84) 
-    PowerMeter_Init_Config_s power_lb_conf = power_base_conf;
-    power_lb_conf.dev_address = 0x84;       // 0x42<<1=0x84
-    power_lb_conf.id = "power_lb";
-    PowerMeterInstance* power_meter_lb = PowerMeter_Init(&power_lb_conf);
-
-    // 右后轮功率模块 (实际地址0x86) 
-    PowerMeter_Init_Config_s power_rb_conf = power_base_conf;
-    power_rb_conf.dev_address = 0x86;       // 0x43<<1=0x86
-    power_rb_conf.id = "power_rb";
-    PowerMeterInstance* power_meter_rb = PowerMeter_Init(&power_rb_conf);
-    */
-
     // 四个轮子的参数一样,改tx_id和反转标志位即可
     Motor_Init_Config_s chassis_motor_config = {
         .can_init_config.can_handle = &hcan1,
@@ -222,9 +182,7 @@ static void EstimateSpeed()
 /* 机器人底盘控制核心任务 */
 void ChassisTask()
 {
-    // 更新功率测量数据
-    PowerMeter_Update();
-    
+
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
 #ifdef ONE_BOARD
