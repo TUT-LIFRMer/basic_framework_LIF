@@ -3,57 +3,187 @@
 #include "bsp_dwt.h"
 #include "general_def.h"
 #include <stdint.h>
+#include <math.h>  
+static PowerData_t global_power_data;
 
-static PowerData_t power_data;
-static float current_lsb = 0.001f;  // 1mA/bit (10A量程)
-static float shunt_resistor = 0.002f; // 2mΩ分流电阻
-
-static IICInstance *ina226_iic;  // 新增IIC实例指针
-
-static uint16_t ReadRegister(uint8_t reg) {
-    uint8_t buf[2];
-    // 使用正确的IIC驱动函数
-    IICAccessMem(ina226_iic, reg, buf, 2, IIC_READ_MEM, 1); // 1表示8位内存地址
-    return (buf[0] << 8) | buf[1];
+/*
+**************************************************
+* 说明：读取BUS电压，并转换为浮点数据
+**************************************************
+*/
+float INA226_GetBusV(void)
+{
+	uint16_t regData;
+	float fVoltage;
+    regData = INA226_GetBusVReg();
+	fVoltage = regData * 0.00125f;/*电压的LSB = 1.25mV*/
+	return fVoltage;
+}
+/*
+**************************************************
+* 说明：读取电流，并转换为浮点数据
+**************************************************
+*/
+float INA226_GetCurrent()
+{
+	uint16_t regData;
+	float fCurrent;
+	regData = INA226_GetCurrentReg();
+	if(regData >= 0x8000)	regData = 0;
+	fCurrent = regData * 0.0002f;/*电流的LSB = 0.2mA，由用户配置*/
+	return fCurrent;
+}
+/*
+**************************************************
+* 说明：读取功率，并转换为浮点数据
+**************************************************
+*/
+float INA226_GetPower()
+{
+	uint16_t regData;
+	float fPower;
+	regData = INA226_GetPowerReg();
+	fPower = regData * 0.005f;/*功率的LSB = 电流的LSB*25*/
+	return fPower;
 }
 
-static void WriteRegister(uint8_t reg, uint16_t value) {
-    uint8_t buf[2] = {value >> 8, value & 0xFF};
-    // 使用正确的IIC驱动函数
-    IICAccessMem(ina226_iic, reg, buf, 2, IIC_WRITE_MEM, 1); // 1表示8位内存地址
+uint8_t INA226_SetConfig(uint16_t ConfigWord)
+{
+    uint8_t SentTable[3];
+    SentTable[0] = INA226_CONFIG;
+    SentTable[1] = (ConfigWord & 0xFF00) >> 8;
+    SentTable[2] = (ConfigWord & 0x00FF);
+    return HAL_I2C_Master_Transmit(&INA226_COM_PORT, INA226_ADDRESS, SentTable, 3, INA226_I2C_TIMEOUT);
 }
 
-void PowerMeter_Init(void) {
-    // 初始化IIC实例
-    static IIC_Init_Config_s iic_conf = {
-        .handle = &hi2c2,  // 假设使用I2C2，根据实际硬件连接修改
-        .dev_address = INA226_ADDR << 1,  // 7位地址左移1位
-        .work_mode = IIC_BLOCK_MODE,
-        .callback = NULL,
-        .id = "INA226"
-    };
-    ina226_iic = IICRegister(&iic_conf);
-
-    // 配置测量参数
-    uint16_t config = INA226_CONFIG_MODE | INA226_CONFIG_VRANGE | INA226_CONFIG_CT;
-    WriteRegister(INA226_REG_CONFIG, config);
-    
-    // 计算并设置校准值
-    uint16_t cal = (uint16_t)(0.00512 / (current_lsb * shunt_resistor));
-    WriteRegister(INA226_REG_CALIB, cal);
-    
-    // 初始值清零
-    power_data = (PowerData_t){0};
+uint16_t INA226_GetConfig()
+{
+    uint8_t SentTable[1] = {INA226_CONFIG};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
 }
 
-void PowerMeter_Update(void) {
-    power_data.bus_voltage = ReadRegister(INA226_REG_BUS_V) * 0.00125f; // 1.25mV/LSB
-    int16_t current_raw = (int16_t)ReadRegister(INA226_REG_CURRENT);
-    power_data.current = current_raw * current_lsb;
-    power_data.power = ReadRegister(INA226_REG_POWER) * 25 * current_lsb;
-    power_data.timestamp = DWT_GetTimeline_s();
+uint16_t INA226_GetShuntV()
+{
+    uint8_t SentTable[1] = {INA226_SHUNTV};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
 }
 
-const PowerData_t* PowerMeter_GetData(void) {
-    return &power_data;
+uint16_t INA226_GetBusVReg()
+{
+    uint8_t SentTable[1] = {INA226_BUSV};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint8_t INA226_SetCalibrationReg(uint16_t ConfigWord)
+{
+    uint8_t SentTable[3];
+    SentTable[0] = INA226_CALIB;
+    SentTable[1] = (ConfigWord & 0xFF00) >> 8;
+    SentTable[2] = (ConfigWord & 0x00FF);
+    return HAL_I2C_Master_Transmit(&INA226_COM_PORT, INA226_ADDRESS, SentTable, 3, INA226_I2C_TIMEOUT);
+}
+
+uint16_t INA226_GetCalibrationReg()
+{
+    uint8_t SentTable[1] = {INA226_CALIB};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint16_t INA226_GetPowerReg()
+{
+    uint8_t SentTable[1] = {INA226_POWER};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint16_t INA226_GetCurrentReg()
+{
+    uint8_t SentTable[1] = {INA226_CURRENT};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint16_t INA226_GetManufID()
+{
+    uint8_t SentTable[1] = {INA226_MANUF_ID};
+    uint8_t ReceivedTable[2];
+
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint16_t INA226_GetDieID()
+{
+    uint8_t SentTable[1] = {INA226_DIE_ID};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint8_t INA226_SetMaskEnable(uint16_t ConfigWord)
+{
+    uint8_t SentTable[3];
+    SentTable[0] = INA226_MASK;
+    SentTable[1] = (ConfigWord & 0xFF00) >> 8;
+    SentTable[2] = (ConfigWord & 0x00FF);
+    return HAL_I2C_Master_Transmit(&INA226_COM_PORT, INA226_ADDRESS, SentTable, 3, INA226_I2C_TIMEOUT);
+}
+
+uint16_t INA226_GetMaskEnable()
+{
+    uint8_t SentTable[1] = {INA226_MASK};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+uint8_t INA226_SetAlertLimit(uint16_t ConfigWord)
+{
+    uint8_t SentTable[3];
+    SentTable[0] = INA226_ALERTL;
+    SentTable[1] = (ConfigWord & 0xFF00) >> 8;
+    SentTable[2] = (ConfigWord & 0x00FF);
+    return HAL_I2C_Master_Transmit(&INA226_COM_PORT, INA226_ADDRESS, SentTable, 3, INA226_I2C_TIMEOUT);
+}
+
+uint16_t INA226_GetAlertLimit()
+{
+    uint8_t SentTable[1] = {INA226_ALERTL};
+    uint8_t ReceivedTable[2];
+    HAL_I2C_Master_Transmit(&INA226_COM_PORT,INA226_ADDRESS, SentTable, 1, INA226_I2C_TIMEOUT);
+    if (HAL_I2C_Master_Receive(&INA226_COM_PORT,INA226_ADDRESS, ReceivedTable, 2, INA226_I2C_TIMEOUT) != HAL_OK) return 0xFF;
+    else return ((uint16_t)ReceivedTable[0]<<8 | ReceivedTable[1]);
+}
+
+/* 数据更新函数 */
+void PowerMeter_Update(void)
+{
+    global_power_data.bus_voltage = INA226_GetBusV();
+    global_power_data.current = INA226_GetCurrent();
+    global_power_data.power = INA226_GetPower();
+}
+
+/* 新增数据获取接口 */
+const PowerData_t* PowerMeter_GetData(void)
+{
+    return &global_power_data;
 }
