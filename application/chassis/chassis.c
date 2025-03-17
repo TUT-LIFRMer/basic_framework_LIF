@@ -63,16 +63,22 @@ void ChassisInit()
     // 初始化四个INA226功率模块（使用I2C2接口，不同地址）
     // -----------------------------------------------------------
     // 基础配置模板
-    PowerMeter_Init_Config_s power_conf = {
-        .iic_init_config = {
-            .iic_handle = &hi2c2,
-            .id = "chassis_power",
-            .work_mode = IIC_BLOCK_MODE
-        },
-        .dev_address = 0x80, // 使用默认地址0x80
-        .id = "main_power"
-    };
-    PowerMeter_Init(&power_conf);
+    // PowerMeter_Init_Config_s power_conf = {
+    //     .iic_init_config = {
+    //         .iic_handle = &hi2c2,
+    //         .id = "chassis_power",
+    //         .work_mode = IIC_BLOCK_MODE
+    //     },
+    //     .dev_address = 0x80, // 使用默认地址0x80
+    //     .id = "main_power"
+    // };
+    // PowerMeter_Init(&power_conf);
+
+    // 以下代码为调试用,读取INA226传来功率数据,并使用H7tools发送至电脑
+    SEGGER_RTT_SetTerminal(2); // 设置显示的终端
+    sprintf(printf_buf, "Voltage=%f, Current=%f, ChasisPower=%f \r\n",
+        PowerData_t.bus_voltage, PowerData_t.current, PowerData_t.power);
+    SEGGER_RTT_WriteString(0, printf_buf);
 
     /*
     // 右前轮功率模块 (实际地址0x80)
