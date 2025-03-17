@@ -98,7 +98,9 @@
         "utility": "c",
         "stddef.h": "c",
         "printf.h": "c",
-        "cstddef": "c"
+        "cstddef": "c",
+        "i2c.h": "c",
+        "motor_def.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
