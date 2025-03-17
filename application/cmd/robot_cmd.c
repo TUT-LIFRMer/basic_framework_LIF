@@ -324,37 +324,40 @@ static void MouseKeySet()
     //     chassis_cmd_send.chassis_speed_buff = 35000;
     //     break;
     // }
+    //设置默认控制模式
+    chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+    chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
     gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
+    //底盘控制量设置
     chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].a * chassis_cmd_send.chassis_speed_buff; // 系数待测
     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * chassis_cmd_send.chassis_speed_buff - rc_data[TEMP].key[KEY_PRESS].s * chassis_cmd_send.chassis_speed_buff;
 
-
-    // gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
-    // gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
-    // if (gimbal_cmd_send.pitch > 50)
-    // {
-    //     gimbal_cmd_send.pitch = 50;
-    // }
-    // if (gimbal_cmd_send.pitch < -20)
-    // {
-    //     gimbal_cmd_send.pitch = -20;
-    // }
-
     if (rc_data[TEMP].mouse.press_r == 1)
     {
-        if (vision_recv_data->ACTION_DATA.abs_yaw == 0)
-        {
-            gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].mouse.x;
+        // if (vision_recv_data->ACTION_DATA.abs_yaw == 0)
+        // {
+        //     gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].mouse.x;
             
-        }else if (vision_recv_data->ACTION_DATA.abs_pitch == 0)
-        {
-            gimbal_cmd_send.pitch -= 0.001f * (float)rc_data[TEMP].mouse.y;
-        }else{
-            gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
-            gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
-        }
+        // }else if (vision_recv_data->ACTION_DATA.abs_pitch == 0)
+        // {
+        //     gimbal_cmd_send.pitch -= 0.001f * (float)rc_data[TEMP].mouse.y;
+        // }else{
+        //     gimbal_cmd_send.yaw = vision_recv_data->ACTION_DATA.abs_yaw;
+        //     gimbal_cmd_send.pitch =vision_recv_data->ACTION_DATA.abs_pitch;
+        // }
         
    
+        // if (gimbal_cmd_send.pitch > 50)
+        // {
+        //     gimbal_cmd_send.pitch = 50;
+        // }
+        // if (gimbal_cmd_send.pitch < -20)
+        // {
+        //     gimbal_cmd_send.pitch = -20;
+        // }
+        //默认鼠标右键是开启视觉模式，但是目前没有视觉代码我把上面代码注释掉以防疯车
+        gimbal_cmd_send.yaw -= 0.005f * (float)rc_data[TEMP].mouse.x;
+        gimbal_cmd_send.pitch -= 0.001f * (float)rc_data[TEMP].mouse.y;
         if (gimbal_cmd_send.pitch > 50)
         {
             gimbal_cmd_send.pitch = 50;
@@ -424,12 +427,10 @@ static void MouseKeySet()
 
     default:
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
         break;
     }
-    // if (chassis_cmd_send.vx != 0 && chassis_cmd_send.vy != 0)
-    // {
-    //     chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
-    // }
+
     
     switch (rc_data[TEMP].key[KEY_PRESS].ctrl)
     {
@@ -438,7 +439,8 @@ static void MouseKeySet()
         break;
     
     default:
-        
+        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
         break;
     }
     if (rc_data[TEMP].mouse.press_l == 0)

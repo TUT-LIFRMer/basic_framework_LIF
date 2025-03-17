@@ -155,7 +155,9 @@ application/gimbal/gimbal.c \
 application/chassis/chassis.c \
 application/shoot/shoot.c \
 application/cmd/robot_cmd.c \
-application/robot.c
+application/robot.c \
+modules/power_meter/power_meter.c \
+modules/power_meter/INA226.c 
 
 # ASM sources
 ASM_SOURCES =  \
@@ -268,7 +270,7 @@ C_INCLUDES =  \
 -Imodules/alarm \
 -Imodules  \
 -IMiddlewares/ST/ARM/DSP/Inc \
--Imodules
+-Imodules/power_meter 
 
 
 # compile gcc flags
