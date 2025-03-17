@@ -8,9 +8,9 @@ void power_meter_init(void){
 }
 
 power_meter_data_t *get_power_meter_data(void){
-    float v;
-    float i;
-    float p;
+    static float v;
+    static float i;
+    static float p;
     v=INA226_GetBusV();
     i=INA226_GetCurrent();
     p=INA226_GetPower();
