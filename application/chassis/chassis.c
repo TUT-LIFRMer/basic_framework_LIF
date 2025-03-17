@@ -13,6 +13,8 @@
 
 #include "chassis.h"
 #include "robot_def.h"
+#include "power_meter.h"
+#include "power_meter.h"
 #include "dji_motor.h"
 #include "super_cap.h"
 #include "message_center.h"
@@ -58,20 +60,23 @@ static float vt_lf, vt_rf, vt_lb, vt_rb; // 底盘速度解算后的临时输出
 
 void ChassisInit()
 {
+    // 初始化功率测量模块
+    PowerMeter_Init();
+    
     // 四个轮子的参数一样,改tx_id和反转标志位即可
     Motor_Init_Config_s chassis_motor_config = {
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
             .speed_PID = {
-                .Kp = 10, // 4.5
-                .Ki = 0,  // 0
+                .Kp = 5, // 4.5
+                .Ki = 1,  // 0
                 .Kd = 0,  // 0
                 .IntegralLimit = 3000,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 12000,
             },
             .current_PID = {
-                .Kp = 0.5, // 0.4
+                .Kp = 0.4, // 0.4
                 .Ki = 0,   // 0
                 .Kd = 0,
                 .IntegralLimit = 3000,
@@ -180,6 +185,9 @@ static void EstimateSpeed()
 /* 机器人底盘控制核心任务 */
 void ChassisTask()
 {
+    // 更新功率测量数据
+    PowerMeter_Update();
+    
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
 #ifdef ONE_BOARD
@@ -214,7 +222,11 @@ void ChassisTask()
         chassis_cmd_recv.wz = 1.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = 5000;
+        chassis_cmd_recv.wz = 6000;
+        if ((chassis_cmd_recv.vx == 0) && (chassis_cmd_recv.vy == 0))
+        {
+            chassis_cmd_recv.wz = 6000;
+        }
         break;
     default:
         break;
@@ -249,7 +261,8 @@ void ChassisTask()
 
     chassis_feedback_data.shoot_heat = (float)referee_data->PowerHeatData.shooter_17mm_1_barrel_heat;
     chassis_feedback_data.shoot_heat_limit = (float)referee_data->GameRobotState.shooter_barrel_heat_limit;
-
+    
+    chassis_feedback_data.robot_HP = referee_data->GameRobotState.current_HP;
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();

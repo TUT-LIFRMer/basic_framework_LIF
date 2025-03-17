@@ -29,6 +29,7 @@
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-arm",
             "configurationProvider": "ms-vscode.makefile-tools"
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\make.exe"
         }
     ],
     "version": 4
