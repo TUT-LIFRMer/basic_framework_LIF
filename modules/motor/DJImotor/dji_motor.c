@@ -333,10 +333,20 @@ void DJIMotorControl()
                 pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
                 power_pid_ = &power_pid;
                 pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
-                motor1_set = (int16_t)((float)motor1_set*pid_ref);
-                motor2_set = (int16_t)((float)motor2_set*pid_ref);
-                motor3_set = (int16_t)((float)motor3_set*pid_ref);
-                motor4_set = (int16_t)((float)motor4_set*pid_ref);
+                if(chassis_motor_feedback.buffer_energy > 20)
+                {
+                    motor1_set = (int16_t)((float)motor1_set*pid_ref);
+                    motor2_set = (int16_t)((float)motor2_set*pid_ref);
+                    motor3_set = (int16_t)((float)motor3_set*pid_ref);
+                    motor4_set = (int16_t)((float)motor4_set*pid_ref);
+                } else if (chassis_motor_feedback.buffer_energy < 10)
+                {
+                    motor1_set = (int16_t)((float)motor1_set*0.2);
+                    motor2_set = (int16_t)((float)motor2_set*0.2);
+                    motor3_set = (int16_t)((float)motor3_set*0.2);
+                    motor4_set = (int16_t)((float)motor4_set*0.2);
+                }
+                
                 //原功率控制方案
                 // if (chassis_motor_feedback.buffer_energy < 60)
                 // {
