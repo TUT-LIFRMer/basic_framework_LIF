@@ -28,6 +28,9 @@
 #define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
 
+//声明power_pid，这么做只是因为没做好模块的封装故在这里加一个声明以便使用
+extern PIDInstance power_pid;
+
 /* DJI电机CAN反馈信息*/
 typedef struct
 {

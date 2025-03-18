@@ -23,6 +23,11 @@
 #include "referee_UI.h"
 #include "arm_math.h"
 #include "bsp_log.h"
+//添加功率控制头文件
+#include "power_meter.h"
+PIDInstance power_pid;
+PID_Init_Config_s power_pid_config;
+
 
 /* 根据robot_def.h中的macro自动计算的参数 */
 #define HALF_WHEEL_BASE (WHEEL_BASE / 2.0f)     // 半轴距
@@ -108,6 +113,13 @@ void ChassisInit()
 
     referee_data = UITaskInit(&huart6,&ui_data); // 裁判系统初始化,会同时初始化UI
 
+    //添加功率计初始化
+    power_meter_init(); // 功率计初始化
+    power_pid_config.Kp = 0.01; // 功率PID参数
+    power_pid_config.Ki = 0.001;
+    power_pid_config.Kd = 0;
+    power_pid_config.MaxOut = 10000;
+    PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
     // SuperCap_Init_Config_s cap_conf = {
     //     .can_config = {
     //         .can_handle = &hcan2,
