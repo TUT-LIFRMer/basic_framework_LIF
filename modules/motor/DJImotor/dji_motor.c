@@ -8,13 +8,14 @@
 //添加功率控制头文件和变量
 #include "power_meter.h"
 power_meter_data_t *get_power_data;
-PIDInstance *power_pid_;
+// PIDInstance *power_pid_;
 
 static uint8_t idx = 0; // register idx,是该文件的全局电机索引,在注册时使用
 /* DJI电机的实例,此处仅保存指针,内存的分配将通过电机实例初始化时通过malloc()进行 */
 static DJIMotorInstance *dji_motor_instance[DJI_MOTOR_CNT] = {NULL}; // 会在control任务中遍历该指针数组进行pid计算
 static Subscriber_t *motor_sub;//注册电机控制模块的订阅者
 static Chassis_Upload_Data_s chassis_motor_feedback;         // 底盘电机反馈数据用于功率限制
+
 /**
  * @brief 由于DJI电机发送以四个一组的形式进行,故对其进行特殊处理,用6个(2can*3group)can_instance专门负责发送
  *        该变量将在 DJIMotorControl() 中使用,分组在 MotorSenderGrouping()中进行
@@ -322,10 +323,11 @@ void DJIMotorControl()
             //对底盘的输出进行功率限制（如果底盘挂载的can变化需要及时更改这里的设置）
             if (sender_assignment[i].can_handle == &hcan1 && sender_assignment[i].txconf.StdId == 0x200)
             {
-                int16_t motor1_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
-                int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
-                int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
-                int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
+                int16_t motor1rf_set = (int16_t)(sender_assignment[i].tx_buff[0]<<8)|(sender_assignment[i].tx_buff[1]&0x00ff);
+                int16_t motor2lf_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
+                int16_t motor3lb_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
+                int16_t motor4rb_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
+                
                 // pid功率控制方案
                 float pid_measure, pid_ref; //功率设置值和反馈值
                 get_power_data = get_power_meter_data();
@@ -334,30 +336,53 @@ void DJIMotorControl()
                 float chassis_current = get_power_data->current; //电流值
                 float chassis_power = get_power_data->power; //功率值
                 
-                //debug
-                SEGGER_RTT_SetTerminal(1);//设置显示的终端
-                float temp_power_show = pid_measure; 
-                sprintf(printf_buf,"Chassis voltage=%f, Chassis_current=%f, Chassis_power=%f\r\n", 
-                    chassis_voltage, chassis_current, chassis_power);
-                SEGGER_RTT_WriteString(0, printf_buf);
+                // if(chassis_motor_feedback.speed_vx || chassis_motor_feedback.speed_vy || chassis_motor_feedback.speed_wz)
+                // {
+                    
+                    
+                //     //debug
+                //     // SEGGER_RTT_SetTerminal(1);//设置显示的终端
+                //     // float temp_power_show = pid_measure; 
+                //     // sprintf(printf_buf,"Chassis_power=%f\r\n", chassis_power);
+                //     // SEGGER_RTT_WriteString(0, printf_buf);
+                    
+                    
+                    
+                //     pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
+                //     // power_pid_ = &power_pid;
+                    
+                //     pid_ref = PIDCalculate(&power_pid, pid_measure, pid_ref);
+                    
 
-                pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
-                power_pid_ = &power_pid;
-                pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
-                // if(chassis_motor_feedback.buffer_energy > 20)
-                // {
-                //     motor1_set = (int16_t)((float)motor1_set + (float)motor1_set*pid_ref);
-                //     motor2_set = (int16_t)((float)motor2_set + (float)motor2_set*pid_ref);
-                //     motor3_set = (int16_t)((float)motor2_set + (float)motor3_set*pid_ref);
-                //     motor4_set = (int16_t)((float)motor2_set + (float)motor4_set*pid_ref);
-                // } else if (chassis_motor_feedback.buffer_energy < 10)
-                // {
-                //     motor1_set = (int16_t)((float)motor1_set*0.2);
-                //     motor2_set = (int16_t)((float)motor2_set*0.2);
-                //     motor3_set = (int16_t)((float)motor3_set*0.2);
-                //     motor4_set = (int16_t)((float)motor4_set*0.2);
+                //     SEGGER_RTT_SetTerminal(1);//设置显示的终端
+                //     sprintf(printf_buf,"absolute=%f\r\n",pid_ref);
+                //     SEGGER_RTT_WriteString(0, printf_buf);
+                    
+                    
+                //     // 调试PID用代码
+                //     motor1rf_set = (int16_t)((float)motor1rf_set*pid_ref);
+                //     motor2lf_set = (int16_t)((float)motor2lf_set*pid_ref);
+                //     motor3lb_set = (int16_t)((float)motor3lb_set*pid_ref);
+                //     motor4rb_set = (int16_t)((float)motor4rb_set*pid_ref);
+
+                //     //以下为实际启用PID代码：启用缓冲能量机制
+                //     // if(chassis_motor_feedback.buffer_energy > 20)
+                //     // {
+                //     //     motor1_set = (int16_t)((float)motor1_set + (float)motor1_set*pid_ref);
+                //     //     motor2_set = (int16_t)((float)motor2_set + (float)motor2_set*pid_ref);
+                //     //     motor3_set = (int16_t)((float)motor2_set + (float)motor3_set*pid_ref);
+                //     //     motor4_set = (int16_t)((float)motor2_set + (float)motor4_set*pid_ref);
+                //     // } else if (chassis_motor_feedback.buffer_energy < 10)
+                //     // {
+                //     //     motor1_set = (int16_t)((float)motor1_set*0.2);
+                //     //     motor2_set = (int16_t)((float)motor2_set*0.2);
+                //     //     motor3_set = (int16_t)((float)motor3_set*0.2);
+                //     //     motor4_set = (int16_t)((float)motor4_set*0.2);
+                //     // }
+
+                    
                 // }
-                
+
                 // 原功率控制方案
                 if (chassis_motor_feedback.buffer_energy < 60)
                 {
@@ -365,32 +390,36 @@ void DJIMotorControl()
                     {
                         if (chassis_motor_feedback.buffer_energy < 10)
                         {
-                            motor1_set = (int16_t)((float)motor1_set*0.2);
-                            motor2_set = (int16_t)((float)motor2_set*0.2);
-                            motor3_set = (int16_t)((float)motor3_set*0.2);
-                            motor4_set = (int16_t)((float)motor4_set*0.2);
+                            motor1rf_set = (int16_t)((float)motor1rf_set*0.2);
+                            motor2lf_set = (int16_t)((float)motor2lf_set*0.2);
+                            motor3lb_set = (int16_t)((float)motor3lb_set*0.2);
+                            motor4rb_set = (int16_t)((float)motor4rb_set*0.2);
                         }else{
-                            motor1_set = (int16_t)((float)motor1_set*0.4);
-                            motor2_set = (int16_t)((float)motor2_set*0.4);
-                            motor3_set = (int16_t)((float)motor3_set*0.4);
-                            motor4_set = (int16_t)((float)motor4_set*0.4);
+                            motor1rf_set = (int16_t)((float)motor1rf_set*0.4);
+                            motor2lf_set = (int16_t)((float)motor2lf_set*0.4);
+                            motor3lb_set = (int16_t)((float)motor3lb_set*0.4);
+                            motor4rb_set = (int16_t)((float)motor4rb_set*0.4);
                         }
                         
                     }else{
-                        motor1_set = (int16_t)((float)motor1_set*0.6);
-                        motor2_set = (int16_t)((float)motor2_set*0.6);
-                        motor3_set = (int16_t)((float)motor3_set*0.6);
-                        motor4_set = (int16_t)((float)motor4_set*0.6);
+                        motor1rf_set = (int16_t)((float)motor1rf_set*0.6);
+                        motor2lf_set = (int16_t)((float)motor2lf_set*0.6);
+                        motor3lb_set = (int16_t)((float)motor3lb_set*0.6);
+                        motor4rb_set = (int16_t)((float)motor4rb_set*0.6);
                     }
                 }
-                sender_assignment[i].tx_buff[0] = (uint8_t)(motor1_set>>8);
-                sender_assignment[i].tx_buff[1] = (uint8_t)(motor1_set&0x00ff);
-                sender_assignment[i].tx_buff[2] = (uint8_t)(motor2_set>>8);
-                sender_assignment[i].tx_buff[3] = (uint8_t)(motor2_set&0x00ff);
-                sender_assignment[i].tx_buff[4] = (uint8_t)(motor3_set>>8);
-                sender_assignment[i].tx_buff[5] = (uint8_t)(motor3_set&0x00ff); 
-                sender_assignment[i].tx_buff[6] = (uint8_t)(motor4_set>>8);
-                sender_assignment[i].tx_buff[7] = (uint8_t)(motor4_set&0x00ff);
+                // float power_measure = chassis_power;
+                // float power_target = chassis_motor_feedback.chassis_power_limit;
+                // RTT_PrintWave_np(2,power_measure,power_target); //非指针参数打印波形
+
+                sender_assignment[i].tx_buff[0] = (uint8_t)(motor1rf_set>>8);
+                sender_assignment[i].tx_buff[1] = (uint8_t)(motor1rf_set&0x00ff);
+                sender_assignment[i].tx_buff[2] = (uint8_t)(motor2lf_set>>8);
+                sender_assignment[i].tx_buff[3] = (uint8_t)(motor2lf_set&0x00ff);
+                sender_assignment[i].tx_buff[4] = (uint8_t)(motor3lb_set>>8);
+                sender_assignment[i].tx_buff[5] = (uint8_t)(motor3lb_set&0x00ff); 
+                sender_assignment[i].tx_buff[6] = (uint8_t)(motor4rb_set>>8);
+                sender_assignment[i].tx_buff[7] = (uint8_t)(motor4rb_set&0x00ff);
             }
             CANTransmit(&sender_assignment[i], 1);
         }

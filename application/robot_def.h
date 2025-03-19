@@ -200,6 +200,9 @@ typedef struct
     float chassis_power_limit;
     int16_t robot_HP;
     float initial_speed;
+    float speed_vx;
+    float speed_vy;
+    float speed_wz;
 } Chassis_Upload_Data_s;
 
 

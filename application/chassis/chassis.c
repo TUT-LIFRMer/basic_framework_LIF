@@ -113,12 +113,12 @@ void ChassisInit()
     referee_data = UITaskInit(&huart6,&ui_data); // 裁判系统初始化,会同时初始化UI
 
     //添加功率计初始化
-    power_meter_init(); // 功率计初始化
-    power_pid_config.Kp = 0.01; // 功率PID参数
-    power_pid_config.Ki = 0.001;
-    power_pid_config.Kd = 0;
-    power_pid_config.MaxOut = 1;
-    PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
+    // power_meter_init(); // 功率计初始化
+    // power_pid_config.Kp = 0.05; // 功率PID参数
+    // power_pid_config.Ki = 0;
+    // power_pid_config.Kd = 0;
+    // power_pid_config.MaxOut = 1000;
+    // PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
 
     // SuperCap_Init_Config_s cap_conf = {
     //     .can_config = {
@@ -273,6 +273,11 @@ void ChassisTask()
 
     //添加弹速反馈
     chassis_feedback_data.initial_speed = referee_data->ShootData.initial_speed;
+    //添加底盘速度控制指令反馈代码
+    chassis_feedback_data.speed_vx = chassis_cmd_recv.vx;
+    chassis_feedback_data.speed_vy = chassis_cmd_recv.vy;
+    chassis_feedback_data.speed_wz = chassis_cmd_recv.wz;
+
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();

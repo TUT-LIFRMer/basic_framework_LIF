@@ -426,8 +426,7 @@ static void MouseKeySet()
         break;
 
     default:
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
+        
         break;
     }
 
@@ -439,8 +438,7 @@ static void MouseKeySet()
         break;
     
     default:
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-        chassis_cmd_send.wz = rc_data[TEMP].key[KEY_PRESS].q*5000-rc_data[TEMP].key[KEY_PRESS].e*5000;
+
         break;
     }
     if (rc_data[TEMP].mouse.press_l == 0)
