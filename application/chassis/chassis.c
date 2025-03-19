@@ -114,12 +114,12 @@ void ChassisInit()
     referee_data = UITaskInit(&huart6,&ui_data); // 裁判系统初始化,会同时初始化UI
 
     //添加功率计初始化
-    power_meter_init(); // 功率计初始化
-    power_pid_config.Kp = 0.01; // 功率PID参数
-    power_pid_config.Ki = 0.001;
-    power_pid_config.Kd = 0;
-    power_pid_config.MaxOut = 10000;
-    PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
+    // power_meter_init(); // 功率计初始化
+    // power_pid_config.Kp = 0.01; // 功率PID参数
+    // power_pid_config.Ki = 0.001;
+    // power_pid_config.Kd = 0;
+    // power_pid_config.MaxOut = 10000;
+    // PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
     // SuperCap_Init_Config_s cap_conf = {
     //     .can_config = {
     //         .can_handle = &hcan2,
@@ -270,6 +270,9 @@ void ChassisTask()
     chassis_feedback_data.shoot_heat_limit = (float)referee_data->GameRobotState.shooter_barrel_heat_limit;
     
     chassis_feedback_data.robot_HP = referee_data->GameRobotState.current_HP;
+
+    //添加弹速反馈
+    chassis_feedback_data.initial_speed = referee_data->ShootData.initial_speed;
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();

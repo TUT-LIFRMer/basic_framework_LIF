@@ -5,6 +5,7 @@
 #include "message_center.h"
 #include "bsp_dwt.h"
 #include "general_def.h"
+#include "bsp_log.h"
 
 /* 对于双发射机构的机器人,将下面的数据封装成结构体即可,生成两份shoot应用实例 */
 static DJIMotorInstance *friction_l, *friction_r, *loader; // 拨盘电机
@@ -140,21 +141,42 @@ void ShootTask()
     case BULLET_SPEED_NONE:
         DJIMotorSetRef(friction_l, 0);
         DJIMotorSetRef(friction_r, 0);
+        //debug
+        SEGGER_RTT_SetTerminal(2);//设置显示的终端
+        sprintf(printf_buf,"FourthLevelBulletSpeed=%f\r\n",chassis_data.initial_speed);
+        SEGGER_RTT_WriteString(0, printf_buf);
+        break;
     case SMALL_AMU_15:
-        DJIMotorSetRef(friction_l, 0);
-        DJIMotorSetRef(friction_r, 0);
+        DJIMotorSetRef(friction_l, 31000);
+        DJIMotorSetRef(friction_r, 31000);
+        //debug
+        SEGGER_RTT_SetTerminal(2);//设置显示的终端
+        sprintf(printf_buf,"ThirdLevelBulletSpeed=%f\r\n",chassis_data.initial_speed);
+        SEGGER_RTT_WriteString(0, printf_buf);
         break;
     case SMALL_AMU_18:
-        DJIMotorSetRef(friction_l, 0);
-        DJIMotorSetRef(friction_r, 0);
+        DJIMotorSetRef(friction_l, 33000);
+        DJIMotorSetRef(friction_r, 33000);
+        //debug
+        SEGGER_RTT_SetTerminal(2);//设置显示的终端
+        sprintf(printf_buf,"SecondLevelBulletSpeed=%f\r\n",chassis_data.initial_speed);
+        SEGGER_RTT_WriteString(0, printf_buf);
         break;
     case SMALL_AMU_30:
         DJIMotorSetRef(friction_l, 35000);
         DJIMotorSetRef(friction_r, 35000);
+        //debug
+        SEGGER_RTT_SetTerminal(2);//设置显示的终端
+        sprintf(printf_buf,"FisrtLevelBulletSpeed=%f\r\n",chassis_data.initial_speed);
+        SEGGER_RTT_WriteString(0, printf_buf);
         break;
     default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
-        DJIMotorSetRef(friction_l, 30000);
-        DJIMotorSetRef(friction_r, 30000);
+        DJIMotorSetRef(friction_l, 35000);
+        DJIMotorSetRef(friction_r, 35000);
+        //debug
+        SEGGER_RTT_SetTerminal(1);//设置显示的终端
+        sprintf(printf_buf,"DefaultBulletSpeed=%f\r\n",chassis_data.initial_speed);
+        SEGGER_RTT_WriteString(0, printf_buf);
         break;
     }
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)

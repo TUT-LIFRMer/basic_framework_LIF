@@ -537,6 +537,11 @@ void RobotCMDTask()
         {
             MouseKeySet();
         }
+        //添加弹速控制命令
+        if(chassis_fetch_data.initial_speed/25 > 0.9 ){
+            shoot_cmd_send.bullet_speed = SMALL_AMU_30;
+
+        }
         if (switch_is_up(rc_data[TEMP].rc.switch_right) && rc_data[TEMP].rc.dial < -200)
         {
             shoot_cmd_send.shoot_mode = SHOOT_ON;

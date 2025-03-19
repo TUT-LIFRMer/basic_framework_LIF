@@ -327,51 +327,51 @@ void DJIMotorControl()
                 int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
                 int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
                 //pid功率控制方案
-                float pid_measure, pid_ref; //功率设置值和反馈值
-                get_power_data = get_power_meter_data();
-                pid_measure = get_power_data->power; //功率反馈值
-                pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
-                power_pid_ = &power_pid;
-                pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
-                if(chassis_motor_feedback.buffer_energy > 20)
-                {
-                    motor1_set = (int16_t)((float)motor1_set + (float)motor1_set*pid_ref);
-                    motor2_set = (int16_t)((float)motor2_set + (float)motor2_set*pid_ref);
-                    motor3_set = (int16_t)((float)motor2_set + (float)motor3_set*pid_ref);
-                    motor4_set = (int16_t)((float)motor2_set + (float)motor4_set*pid_ref);
-                } else if (chassis_motor_feedback.buffer_energy < 10)
-                {
-                    motor1_set = (int16_t)((float)motor1_set*0.2);
-                    motor2_set = (int16_t)((float)motor2_set*0.2);
-                    motor3_set = (int16_t)((float)motor3_set*0.2);
-                    motor4_set = (int16_t)((float)motor4_set*0.2);
-                }
+                // float pid_measure, pid_ref; //功率设置值和反馈值
+                // get_power_data = get_power_meter_data();
+                // pid_measure = get_power_data->power; //功率反馈值
+                // pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
+                // power_pid_ = &power_pid;
+                // pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
+                // if(chassis_motor_feedback.buffer_energy > 20)
+                // {
+                //     motor1_set = (int16_t)((float)motor1_set + (float)motor1_set*pid_ref);
+                //     motor2_set = (int16_t)((float)motor2_set + (float)motor2_set*pid_ref);
+                //     motor3_set = (int16_t)((float)motor2_set + (float)motor3_set*pid_ref);
+                //     motor4_set = (int16_t)((float)motor2_set + (float)motor4_set*pid_ref);
+                // } else if (chassis_motor_feedback.buffer_energy < 10)
+                // {
+                //     motor1_set = (int16_t)((float)motor1_set*0.2);
+                //     motor2_set = (int16_t)((float)motor2_set*0.2);
+                //     motor3_set = (int16_t)((float)motor3_set*0.2);
+                //     motor4_set = (int16_t)((float)motor4_set*0.2);
+                // }
                 
                 //原功率控制方案
-                // if (chassis_motor_feedback.buffer_energy < 60)
-                // {
-                //     if (chassis_motor_feedback.buffer_energy < 30)
-                //     {
-                //         if (chassis_motor_feedback.buffer_energy < 10)
-                //         {
-                //             motor1_set = (int16_t)((float)motor1_set*0.2);
-                //             motor2_set = (int16_t)((float)motor2_set*0.2);
-                //             motor3_set = (int16_t)((float)motor3_set*0.2);
-                //             motor4_set = (int16_t)((float)motor4_set*0.2);
-                //         }else{
-                //             motor1_set = (int16_t)((float)motor1_set*0.4);
-                //             motor2_set = (int16_t)((float)motor2_set*0.4);
-                //             motor3_set = (int16_t)((float)motor3_set*0.4);
-                //             motor4_set = (int16_t)((float)motor4_set*0.4);
-                //         }
+                if (chassis_motor_feedback.buffer_energy < 60)
+                {
+                    if (chassis_motor_feedback.buffer_energy < 30)
+                    {
+                        if (chassis_motor_feedback.buffer_energy < 10)
+                        {
+                            motor1_set = (int16_t)((float)motor1_set*0.2);
+                            motor2_set = (int16_t)((float)motor2_set*0.2);
+                            motor3_set = (int16_t)((float)motor3_set*0.2);
+                            motor4_set = (int16_t)((float)motor4_set*0.2);
+                        }else{
+                            motor1_set = (int16_t)((float)motor1_set*0.4);
+                            motor2_set = (int16_t)((float)motor2_set*0.4);
+                            motor3_set = (int16_t)((float)motor3_set*0.4);
+                            motor4_set = (int16_t)((float)motor4_set*0.4);
+                        }
                         
-                //     }else{
-                //         motor1_set = (int16_t)((float)motor1_set*0.6);
-                //         motor2_set = (int16_t)((float)motor2_set*0.6);
-                //         motor3_set = (int16_t)((float)motor3_set*0.6);
-                //         motor4_set = (int16_t)((float)motor4_set*0.6);
-                //     }
-                // }
+                    }else{
+                        motor1_set = (int16_t)((float)motor1_set*0.6);
+                        motor2_set = (int16_t)((float)motor2_set*0.6);
+                        motor3_set = (int16_t)((float)motor3_set*0.6);
+                        motor4_set = (int16_t)((float)motor4_set*0.6);
+                    }
+                }
                 sender_assignment[i].tx_buff[0] = (uint8_t)(motor1_set>>8);
                 sender_assignment[i].tx_buff[1] = (uint8_t)(motor1_set&0x00ff);
                 sender_assignment[i].tx_buff[2] = (uint8_t)(motor2_set>>8);
