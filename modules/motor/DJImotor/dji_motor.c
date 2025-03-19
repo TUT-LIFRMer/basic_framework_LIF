@@ -326,13 +326,24 @@ void DJIMotorControl()
                 int16_t motor2_set = (int16_t)(sender_assignment[i].tx_buff[2]<<8)|(sender_assignment[i].tx_buff[3]&0x00ff);
                 int16_t motor3_set = (int16_t)(sender_assignment[i].tx_buff[4]<<8)|(sender_assignment[i].tx_buff[5]&0x00ff);
                 int16_t motor4_set = (int16_t)(sender_assignment[i].tx_buff[6]<<8)|(sender_assignment[i].tx_buff[7]&0x00ff);
-                //pid功率控制方案
-                // float pid_measure, pid_ref; //功率设置值和反馈值
-                // get_power_data = get_power_meter_data();
-                // pid_measure = get_power_data->power; //功率反馈值
-                // pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
-                // power_pid_ = &power_pid;
-                // pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
+                // pid功率控制方案
+                float pid_measure, pid_ref; //功率设置值和反馈值
+                get_power_data = get_power_meter_data();
+                pid_measure = get_power_data->power; //功率反馈值
+                float chassis_voltage = get_power_data->voltage; //电压值
+                float chassis_current = get_power_data->current; //电流值
+                float chassis_power = get_power_data->power; //功率值
+                
+                //debug
+                SEGGER_RTT_SetTerminal(1);//设置显示的终端
+                float temp_power_show = pid_measure; 
+                sprintf(printf_buf,"Chassis voltage=%f, Chassis_current=%f, Chassis_power=%f\r\n", 
+                    chassis_voltage, chassis_current, chassis_power);
+                SEGGER_RTT_WriteString(0, printf_buf);
+
+                pid_ref = chassis_motor_feedback.chassis_power_limit; //功率设置值
+                power_pid_ = &power_pid;
+                pid_ref = PIDCalculate(power_pid_, pid_measure, pid_ref);
                 // if(chassis_motor_feedback.buffer_energy > 20)
                 // {
                 //     motor1_set = (int16_t)((float)motor1_set + (float)motor1_set*pid_ref);
@@ -347,7 +358,7 @@ void DJIMotorControl()
                 //     motor4_set = (int16_t)((float)motor4_set*0.2);
                 // }
                 
-                //原功率控制方案
+                // 原功率控制方案
                 if (chassis_motor_feedback.buffer_energy < 60)
                 {
                     if (chassis_motor_feedback.buffer_energy < 30)

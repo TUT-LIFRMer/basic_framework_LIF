@@ -53,7 +53,6 @@ static Referee_Interactive_info_t ui_data; // UI数据，将底盘中的数据�
 
 static SuperCapInstance *cap;                                       // 超级电容
 static DJIMotorInstance *motor_lf, *motor_rf, *motor_lb, *motor_rb; // left right forward back
-//static PowerMeterInstance *power_meter_rf, *power_meter_lf, *power_meter_lb, *power_meter_rb;
 
 /* 用于自旋变速策略的时间变量 */
 // static float t;
@@ -114,12 +113,13 @@ void ChassisInit()
     referee_data = UITaskInit(&huart6,&ui_data); // 裁判系统初始化,会同时初始化UI
 
     //添加功率计初始化
-    // power_meter_init(); // 功率计初始化
-    // power_pid_config.Kp = 0.01; // 功率PID参数
-    // power_pid_config.Ki = 0.001;
-    // power_pid_config.Kd = 0;
-    // power_pid_config.MaxOut = 10000;
-    // PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
+    power_meter_init(); // 功率计初始化
+    power_pid_config.Kp = 0.01; // 功率PID参数
+    power_pid_config.Ki = 0.001;
+    power_pid_config.Kd = 0;
+    power_pid_config.MaxOut = 1;
+    PIDInit(&power_pid, &power_pid_config); // 功率PID初始化
+
     // SuperCap_Init_Config_s cap_conf = {
     //     .can_config = {
     //         .can_handle = &hcan2,

@@ -14,9 +14,6 @@ power_meter_data_t *get_power_meter_data(void){
     v=INA226_GetBusV();
     i=INA226_GetCurrent();
     p=INA226_GetPower();
-    v=v/1000;
-    i=i/1000;
-    p=p/1000;
     data.voltage=v;
     data.current=i;
     data.power=p;
